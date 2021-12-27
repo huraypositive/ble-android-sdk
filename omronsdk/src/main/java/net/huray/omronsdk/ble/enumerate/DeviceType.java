@@ -1,6 +1,7 @@
 package net.huray.omronsdk.ble.enumerate;
 
 public enum DeviceType {
+    UNKNOWN_DEVICE(99),
     OMRON_WEIGHT(0),
     OMRON_BP(1);
 
@@ -12,7 +13,8 @@ public enum DeviceType {
 
     public static DeviceType getDeviceType(int number) {
         if (number == 0) return OMRON_WEIGHT;
-        return OMRON_BP;
+        if (number == 1) return OMRON_BP;
+        return UNKNOWN_DEVICE;
     }
 
     public int getNumber() {
@@ -21,7 +23,8 @@ public enum DeviceType {
 
     public String getName() {
         if (this == OMRON_WEIGHT) return "오므론 체성분계 Omron HBF-222T";
-        return "오므론 혈압계 Omron HEM-9200T";
+        if (this == OMRON_BP) return "오므론 혈압계 Omron HEM-9200T";
+        return "미등록 기기";
     }
 
     public OHQDeviceCategory getOmronDeviceCategory() {
