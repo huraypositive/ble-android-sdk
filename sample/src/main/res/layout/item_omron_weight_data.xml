@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_omron_weight_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2021.07.16 오전 09:57"
+        android:textSize="22sp"
+        android:textColor="@color/design_default_color_on_secondary"
+        android:gravity="center_vertical"
+        android:layout_margin="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_omron_weight_body_fat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="체지방 23.8%"
+        android:textSize="18sp"
+        android:textColor="@color/cardview_dark_background"
+        android:gravity="center_vertical"
+        android:layout_margin="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_omron_weight_time"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_omron_weight_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="70"
+        android:textSize="30sp"
+        android:textColor="@color/design_default_color_on_secondary"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tv_omron_weight_unit"
+        android:layout_margin="10dp"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_omron_weight_unit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="kg"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="10dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
