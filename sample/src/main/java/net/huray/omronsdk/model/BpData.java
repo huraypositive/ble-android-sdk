@@ -1,14 +1,12 @@
 package net.huray.omronsdk.model;
 
-import java.math.BigDecimal;
-
 public class BpData {
     final String timeStamp;
-    final BigDecimal sbp;
-    final BigDecimal dbp;
-    final BigDecimal pulseRate;
+    final float sbp;
+    final float dbp;
+    final float pulseRate;
 
-    public BpData(String timeStamp, BigDecimal sbp, BigDecimal dbp, BigDecimal pulseRate) {
+    public BpData(String timeStamp, float sbp, float dbp, float pulseRate) {
         this.timeStamp = timeStamp;
         this.sbp = sbp;
         this.dbp = dbp;
@@ -19,15 +17,15 @@ public class BpData {
         return timeStamp;
     }
 
-    public BigDecimal getSbp() {
+    public float getSbp() {
         return sbp;
     }
 
-    public BigDecimal getDbp() {
+    public float getDbp() {
         return dbp;
     }
 
-    public BigDecimal getPulseRate() {
+    public float getPulseRate() {
         return pulseRate;
     }
 }

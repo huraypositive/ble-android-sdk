@@ -200,9 +200,9 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
     private BpData mapBpResult(Map<OHQMeasurementRecordKey, Object> data) {
         return new BpData(
                 (String) data.get(OHQMeasurementRecordKey.TimeStampKey),
-                ((BigDecimal) data.get(OHQMeasurementRecordKey.SystolicKey)),
-                ((BigDecimal) data.get(OHQMeasurementRecordKey.DiastolicKey)),
-                ((BigDecimal) data.get(OHQMeasurementRecordKey.PulseRateKey))
+                ((BigDecimal) data.get(OHQMeasurementRecordKey.SystolicKey)).floatValue(),
+                ((BigDecimal) data.get(OHQMeasurementRecordKey.DiastolicKey)).floatValue(),
+                ((BigDecimal) data.get(OHQMeasurementRecordKey.PulseRateKey)).floatValue()
 
         );
     }
