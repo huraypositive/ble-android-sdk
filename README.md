@@ -105,6 +105,7 @@ public classRegisterActivity extends AppCompatActivity implements OmronDeviceMan
 
         if (results.isEmpty()) {
             // 요청은 성공했지만 새로 측정된 데이터가 없음
+            return;
         }
 
         if (deviceType.isBpDevice()) {
@@ -119,6 +120,8 @@ public classRegisterActivity extends AppCompatActivity implements OmronDeviceMan
             if (omronManager.isUserInfoChanged(sessionData, OmronOption.getDemoUser())) {
                 updateIncrementDataKey();
             }
+
+            return;
         }
     }
 }
