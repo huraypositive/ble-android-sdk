@@ -13,7 +13,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import net.huray.omronsdk.OmronDeviceManager;
 import net.huray.omronsdk.R;
-import net.huray.omronsdk.ble.entity.OmronOption;
 import net.huray.omronsdk.ble.entity.SessionData;
 import net.huray.omronsdk.ble.entity.WeightDeviceInfo;
 import net.huray.omronsdk.ble.enumerate.DeviceType;
@@ -169,7 +168,7 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
             updateWeightData(results);
             PrefUtils.setOmronBleWeightDeviceSequenceNumber(sessionData.getSequenceNumberOfLatestRecord());
 
-            if (omronManager.isUserInfoChanged(sessionData, OmronOption.getDemoUser())) {
+            if (omronManager.isUserInfoChanged(sessionData, Const.getDemoUser())) {
                 // updateIncrementDataKey();
             }
         }

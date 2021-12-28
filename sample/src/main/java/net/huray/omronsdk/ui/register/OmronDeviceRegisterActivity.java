@@ -16,6 +16,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import net.huray.omronsdk.OmronDeviceManager;
 import net.huray.omronsdk.R;
 import net.huray.omronsdk.ble.entity.DiscoveredDevice;
+import net.huray.omronsdk.ble.entity.OmronOption;
 import net.huray.omronsdk.ble.entity.WeightDeviceInfo;
 import net.huray.omronsdk.ble.enumerate.DeviceType;
 import net.huray.omronsdk.ble.enumerate.OHQCompletionReason;
@@ -108,8 +109,11 @@ public class OmronDeviceRegisterActivity extends AppCompatActivity
         }
 
         deviceAddress = adapter.getDeviceAddress(position);
-        WeightDeviceInfo deviceData = WeightDeviceInfo.newInstanceForRegister(deviceAddress, userIndex);
-        omronManager.connectWeightDevice(deviceData);
+        WeightDeviceInfo deviceInfo = WeightDeviceInfo.newInstanceForRegister(
+                Const.getDemoUser(), // This should be real user data in product code
+                deviceAddress,
+                userIndex);
+        omronManager.connectWeightDevice(deviceInfo);
         showLoadingView();
     }
 

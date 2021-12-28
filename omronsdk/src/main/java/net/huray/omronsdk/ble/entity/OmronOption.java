@@ -4,13 +4,10 @@ import android.os.Bundle;
 
 import net.huray.omronsdk.androidcorebluetooth.CBConfig;
 import net.huray.omronsdk.ble.OHQConfig;
-import net.huray.omronsdk.ble.enumerate.OHQGender;
 import net.huray.omronsdk.ble.enumerate.OHQSessionOptionKey;
 import net.huray.omronsdk.ble.enumerate.OHQSessionType;
-import net.huray.omronsdk.ble.enumerate.OHQUserDataKey;
 import net.huray.omronsdk.utility.Bundler;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,16 +15,6 @@ public class OmronOption {
     private static final int CONSENT_CODE_OHQ = 0x020E;
     private static final long REGISTER_WAIT_TIME = 30 * 1000L;
     private static final long REQUEST_WAIT_TIME = 15 * 1000L;
-
-    // TODO: remove
-    public static Map<OHQUserDataKey, Object> getDemoUser() {
-        final Map<OHQUserDataKey, Object> userData = new HashMap<>();
-        userData.put(OHQUserDataKey.DateOfBirthKey, "2001-01-01");
-        userData.put(OHQUserDataKey.HeightKey, new BigDecimal("170.5"));
-        userData.put(OHQUserDataKey.GenderKey, OHQGender.Male);
-
-        return userData;
-    }
 
     public static Bundle getConfig() {
         CBConfig.CreateBondOption cOption = CBConfig.CreateBondOption.UsedBeforeGattConnection;
@@ -82,7 +69,7 @@ public class OmronOption {
         }
 
         options.put(OHQSessionOptionKey.UserIndexKey, info.getIndex());
-        options.put(OHQSessionOptionKey.UserDataKey, OmronOption.getDemoUser());
+        options.put(OHQSessionOptionKey.UserDataKey, info.getUserData());
         options.put(OHQSessionOptionKey.UserDataUpdateFlagKey, true);
         options.put(OHQSessionOptionKey.AllowAccessToOmronExtendedMeasurementRecordsKey, true);
         options.put(OHQSessionOptionKey.AllowControlOfReadingPositionToMeasurementRecordsKey, true);
