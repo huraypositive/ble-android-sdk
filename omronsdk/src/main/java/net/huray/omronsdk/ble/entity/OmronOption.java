@@ -14,7 +14,7 @@ import java.util.Map;
 public class OmronOption {
     private static final int CONSENT_CODE_OHQ = 0x020E;
     private static final long REGISTER_WAIT_TIME = 30 * 1000L;
-    private static final long REQUEST_WAIT_TIME = 15 * 1000L;
+    private static final long REQUEST_WAIT_TIME = 30 * 1000L;
 
     public static Bundle getConfig() {
         CBConfig.CreateBondOption cOption = CBConfig.CreateBondOption.UsedBeforeGattConnection;
