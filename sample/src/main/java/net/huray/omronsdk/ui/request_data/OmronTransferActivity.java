@@ -166,10 +166,15 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
 
         if (deviceType.isWeightDevice()) {
             updateWeightData(results);
-            PrefUtils.setOmronBleWeightDeviceSequenceNumber(sessionData.getSequenceNumberOfLatestRecord());
+
+            if (sessionData.getSequenceNumberOfLatestRecord() != null) {
+                PrefUtils.setOmronBleWeightDeviceSequenceNumber(sessionData.getSequenceNumberOfLatestRecord());
+            }
 
             if (omronManager.isUserInfoChanged(sessionData, Const.getDemoUser())) {
-                // updateIncrementDataKey();
+                if (sessionData.getDatabaseChangeIncrement() != null) {
+                    PrefUtils.setOmronBleDataBaseIncrementKey(sessionData.getDatabaseChangeIncrement());
+                }
             }
         }
     }
