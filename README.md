@@ -17,7 +17,7 @@ allprojects {
 
 // in your app-level build.gradle
 dependencies {
-        implementation 'com.github.huraypositive:ble-android-sdk:$version'
+    implementation 'com.github.huraypositive:omron-android-sdk:$version'
 }
 ```
 
