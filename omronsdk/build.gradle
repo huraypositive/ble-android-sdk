@@ -45,3 +45,12 @@ dependencies {
 
     api 'com.neovisionaries:nv-bluetooth:1.8'
 }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'net.huray'
+            artifactId = 'omronsdk'
+        }
+    }
+}
