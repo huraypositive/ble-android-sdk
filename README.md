@@ -6,10 +6,27 @@
 - 오므론 혈압계 [Omron HEM-9200T]
 
 ## 의존성 추가
-- TBD (jitpack 배포 예정)
+```gradle
+// in your root build.gradle
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+// in your app-level build.gradle
+dependencies {
+        implementation 'com.github.huraypositive:ble-android-sdk:Tag'
+}
+```
 
 ## Sample Code
 - sample 모듈 참고
+
+## 사용 방법
+- OmronDeviceManager 클래스 (기기 스캔, 연결, 데이터 요청)
+- sample 코드가 Java로 작성되어있는 관계로 예시 코드 또한 Java로 설명한다.
 
 ## Manifest.xml 권한 추가
 ```xml
@@ -18,10 +35,6 @@
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 ```
-
-## 사용 방법
-- OmronDeviceManager 클래스 사용 (기기 스캔, 연결, 데이터 요청)
-- sample 코드가 Java로 작성되어있는 관계로 예시 코드 또한 Java로 설명한다.
 
 ## 1. 기기 페어링 (Register)
 #### 사용할 클래스(Activity 혹은 Fragment)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
