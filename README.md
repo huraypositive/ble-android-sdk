@@ -17,7 +17,7 @@ allprojects {
 
 // in your app-level build.gradle
 dependencies {
-        implementation 'com.github.huraypositive:ble-android-sdk:Tag'
+        implementation 'com.github.huraypositive:ble-android-sdk:$version'
 }
 ```
 
