@@ -49,8 +49,8 @@ dependencies {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = 'net.huray'
-            artifactId = 'omronsdk'
+            groupId = 'com.github.huraypositive'
+            artifactId = 'ble-android-sdk'
         }
     }
 }
