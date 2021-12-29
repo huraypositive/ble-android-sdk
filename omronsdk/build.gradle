@@ -56,7 +56,7 @@ afterEvaluate {
                 // You can then customize attributes of the publication as shown below.
                 groupId = 'com.github.huraypositive'
                 artifactId = 'final'
-                version = '1.0'
+                version = '1.0.0'
             }
             // Creates a Maven publication called “debug”.
             debug(MavenPublication) {
@@ -65,7 +65,7 @@ afterEvaluate {
 
                 groupId = 'com.github.huraypositive'
                 artifactId = 'final-debug'
-                version = '1.0'
+                version = '1.0.0'
             }
         }
     }
