@@ -11,6 +11,14 @@
 ## Sample Code
 - sample 모듈 참고
 
+## Manifest.xml 권한 추가
+```xml
+<uses-permission android:name="android.permission.BLUETOOTH" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+```
+
 ## 사용 방법
 - OmronDeviceManager 클래스 사용 (기기 스캔, 연결, 데이터 요청)
 - sample 코드가 Java로 작성되어있는 관계로 예시 코드 또한 Java로 설명한다.
