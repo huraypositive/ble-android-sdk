@@ -113,6 +113,17 @@ private void connectBpDevice(int position) {
 #### 사용할 클래스(Activity 혹은 Fragment)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
 ```Java
 public classRegisterActivity extends AppCompatActivity implements OmronDeviceManager.TransferListener {
+    // 기기에서 측정 완료 후 아래 데이터 요처 메서드 호출
+    private void requestData() {
+        if (deviceType.isBpDevice) {
+            omronManager.requestBpData(deviceAddress);
+        }
+
+        if (deviceType.isWeightDevice) {
+            omronManager.requestWeightData(deviceInfo)
+        }
+    }
+
     @Override
     void onTransferFailed(OHQCompletionReason reason) {
         // 데이터 요청 실패 시 호출되는 콜백 메서드
