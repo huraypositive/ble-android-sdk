@@ -36,6 +36,19 @@ dependencies {
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 ```
 
+## 0. OHQDeviceManager 초기화
+#### SDK를 사용하기 전 OHQDeviceManager 인스턴스를 초기화해줘야 한다. 
+```Java
+// in your App.java
+public class App extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        OHQDeviceManager.init(getApplicationContext());
+    }
+}
+```
+
 ## 1. 기기 페어링 (Register)
 #### 사용할 클래스(Activity 혹은 Fragment)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
 ```Java
