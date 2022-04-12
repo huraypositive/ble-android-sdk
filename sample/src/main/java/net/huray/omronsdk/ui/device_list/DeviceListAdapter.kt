@@ -20,7 +20,7 @@ class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceListViewHolder {
         val view =
             LayoutInflater.from(parent.context).inflate(R.layout.item_device_list, parent, false)
-        return DeviceListViewHolder(view, clickListener)
+        return DeviceListViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: DeviceListViewHolder, position: Int) {
@@ -54,19 +54,19 @@ class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
         deviceStates.add(
             DeviceStateData(
                 OmronDeviceType.BODY_COMPOSITION_MONITOR_HBF_222F,
-                PrefUtils.getBodyCompositionMonitor_HBF222T_Address() != null
+                PrefUtils.getBodyCompositionMonitorHbf222tAddress() != null
             )
         )
         deviceStates.add(
             DeviceStateData(
                 OmronDeviceType.BP_MONITOR_HEM_9200T,
-                PrefUtils.getBpMonitor_HEM9200T_Address() != null
+                PrefUtils.getBpMonitorHem9200tAddress() != null
             )
         )
         deviceStates.add(
             DeviceStateData(
                 OmronDeviceType.BP_MONITOR_HEM_7155T,
-                PrefUtils.getBpMonitor_HEM7155T_Address() != null
+                PrefUtils.getBpMonitorHem7155tAddress() != null
             )
         )
     }

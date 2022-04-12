@@ -51,7 +51,7 @@ public class App extends Application {
 ```
 
 ## 1. 기기 페어링 (Register)
-#### 사용할 클래스(Activity 혹은 Fragment)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
+#### 사용할 클래스(`ViewModel` or `Activity` or `Fragment`)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
 ```Java
 public classRegisterActivity extends AppCompatActivity implements OmronDeviceManager.RegisterListener {
     @Override

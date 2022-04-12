@@ -8,7 +8,6 @@ import net.huray.omronsdk.databinding.ItemDeviceListBinding
 
 class DeviceListViewHolder(
     containerView: View,
-    private val clickListener: DeviceItemClickListener
 ) : RecyclerView.ViewHolder(containerView) {
     private val binding = ItemDeviceListBinding.bind(containerView)
     val viewGroup = binding.vgDeviceItem
