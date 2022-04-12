@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -25,6 +26,9 @@ android {
     compileOptions {
         sourceCompatibility sourceCompatibility
         targetCompatibility targetCompatibility
+    }
+    buildFeatures {
+        dataBinding true
     }
 }
 
