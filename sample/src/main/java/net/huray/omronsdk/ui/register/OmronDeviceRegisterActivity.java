@@ -16,9 +16,8 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import net.huray.omronsdk.OmronDeviceManager;
 import net.huray.omronsdk.R;
 import net.huray.omronsdk.ble.entity.DiscoveredDevice;
-import net.huray.omronsdk.ble.entity.OmronOption;
 import net.huray.omronsdk.ble.entity.WeightDeviceInfo;
-import net.huray.omronsdk.ble.enumerate.DeviceType;
+import net.huray.omronsdk.ble.enumerate.OmronDeviceType;
 import net.huray.omronsdk.ble.enumerate.OHQCompletionReason;
 import net.huray.omronsdk.ble.enumerate.OHQSessionType;
 import net.huray.omronsdk.ui.request_data.OmronTransferActivity;
@@ -33,7 +32,7 @@ public class OmronDeviceRegisterActivity extends AppCompatActivity
         implements OmronDeviceManager.RegisterListener {
 
     private DeviceRegisterAdapter adapter;
-    private DeviceType deviceType;
+    private OmronDeviceType omronDeviceType;
     private OmronDeviceManager omronManager;
 
     private Button btnScan;
@@ -63,12 +62,12 @@ public class OmronDeviceRegisterActivity extends AppCompatActivity
 
     private void setDeviceType() {
         int deviceTypeNumber = getIntent().getIntExtra(Const.EXTRA_DEVICE_TYPE, 0);
-        deviceType = DeviceType.getDeviceType(deviceTypeNumber);
+        omronDeviceType = OmronDeviceType.getDeviceType(deviceTypeNumber);
     }
 
     private void initDeviceManager() {
         omronManager = new OmronDeviceManager(
-                deviceType.getOmronDeviceCategory(),
+                omronDeviceType.getOmronDeviceCategory(),
                 OHQSessionType.REGISTER,
                 this);
     }
@@ -94,7 +93,7 @@ public class OmronDeviceRegisterActivity extends AppCompatActivity
     }
 
     private void connectDevice(int position) {
-        if (deviceType.isWeightDevice()) {
+        if (omronDeviceType.isHBF222F()) {
             connectWeightDevice(position);
             return;
         }
@@ -125,9 +124,9 @@ public class OmronDeviceRegisterActivity extends AppCompatActivity
 
     private void initViews() {
         TextView tvTitle = findViewById(R.id.tv_scan_title);
-        tvTitle.setText(deviceType.getName());
+        tvTitle.setText(omronDeviceType.getName());
 
-        adapter = new DeviceRegisterAdapter(this, deviceType);
+        adapter = new DeviceRegisterAdapter(this, omronDeviceType);
         ListView listView = findViewById(R.id.lv_scanned_device_list);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener((parent, view, position, id) -> connectDevice(position));
@@ -152,7 +151,7 @@ public class OmronDeviceRegisterActivity extends AppCompatActivity
         radioButtons.add(R.id.rb_four);
 
         RadioGroup radioGroup = findViewById(R.id.radio_group);
-        if (deviceType.isWeightDevice()) {
+        if (omronDeviceType.isHBF222F()) {
             radioGroup.setVisibility(View.VISIBLE);
             return;
         }
@@ -184,18 +183,18 @@ public class OmronDeviceRegisterActivity extends AppCompatActivity
             throw new IllegalArgumentException("deviceAddress");
         }
 
-        if (deviceType.isWeightDevice()) {
-            PrefUtils.setOmronBleWeightDeviceAddress(deviceAddress);
-            PrefUtils.setOmronBleWeightDeviceUserIndex(userIndex);
+        if (omronDeviceType.isHBF222F()) {
+            PrefUtils.setBodyCompositionMonitor_HBF222T_Address(deviceAddress);
+            PrefUtils.setBodyCompositionMonitor_HBF222T_UserIndex(userIndex);
             return;
         }
 
-        PrefUtils.setOmronBleBpDeviceAddress(deviceAddress);
+        PrefUtils.setBpMonitor_HEM9200T_DeviceAddress(deviceAddress);
     }
 
     private void moveToRequestActivity() {
         Intent intent = new Intent(this, OmronTransferActivity.class);
-        intent.putExtra(Const.EXTRA_DEVICE_TYPE, deviceType.getNumber());
+        intent.putExtra(Const.EXTRA_DEVICE_TYPE, omronDeviceType.getNumber());
         startActivity(intent);
         finish();
     }

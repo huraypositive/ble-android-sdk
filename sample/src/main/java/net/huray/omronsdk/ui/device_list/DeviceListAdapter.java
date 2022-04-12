@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import net.huray.omronsdk.R;
-import net.huray.omronsdk.ble.enumerate.DeviceType;
+import net.huray.omronsdk.ble.enumerate.OmronDeviceType;
 import net.huray.omronsdk.utils.PrefUtils;
 
 import java.util.ArrayList;
@@ -17,8 +17,7 @@ import java.util.List;
 
 public class DeviceListAdapter extends BaseAdapter {
     private final Context context;
-    private final List<DeviceType> devices = new ArrayList<>();
-    private final List<Boolean> connectionStates = new ArrayList<>();
+    private final List<DeviceStateData> deviceStates = new ArrayList<>();
 
     public DeviceListAdapter(Context context) {
         this.context = context;
@@ -31,29 +30,27 @@ public class DeviceListAdapter extends BaseAdapter {
     }
 
     private void initDeviceItems() {
-        devices.add(DeviceType.OMRON_WEIGHT);
-        devices.add(DeviceType.OMRON_BP);
-
-        connectionStates.add(PrefUtils.getOmronBleWeightDeviceAddress() != null);
-        connectionStates.add(PrefUtils.getOmronBleBpDeviceAddress() != null);
+        deviceStates.add(new DeviceStateData(OmronDeviceType.BODY_COMPOSITION_MONITOR_HBF_222F, PrefUtils.getBodyCompositionMonitor_HBF222T_Address() != null));
+        deviceStates.add(new DeviceStateData(OmronDeviceType.BP_MONITOR_HEM_9200T, PrefUtils.getBpMonitor_HEM9200T_Address() != null));
+        deviceStates.add(new DeviceStateData(OmronDeviceType.BP_MONITOR_HEM_7155T, PrefUtils.getBpMonitor_HEM7155T_Address() != null));
     }
 
     public int getDeviceTypeNumber(int position) {
-        return devices.get(position).getNumber();
+        return deviceStates.get(position).getDeviceType().getNumber();
     }
 
     public boolean getDeviceConnectionState(int position) {
-        return connectionStates.get(position);
+        return deviceStates.get(position).isConnected();
     }
 
     @Override
     public int getCount() {
-        return devices.size();
+        return deviceStates.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return devices.get(position);
+        return deviceStates.get(position);
     }
 
     @Override
@@ -70,7 +67,7 @@ public class DeviceListAdapter extends BaseAdapter {
             final ViewHolder holder = new ViewHolder();
 
             holder.tvDeviceName = view.findViewById(R.id.tv_device_item);
-            holder.tvDeviceName.setText(devices.get(position).getName());
+            holder.tvDeviceName.setText(deviceStates.get(position).getDeviceType().getName());
 
             holder.ivIndicator = view.findViewById(R.id.iv_connection_indicator);
             setIndicator(holder.ivIndicator, position);
@@ -82,7 +79,7 @@ public class DeviceListAdapter extends BaseAdapter {
     }
 
     private void setIndicator(ImageView view, int position) {
-        if (connectionStates.get(position)) view.setImageResource(R.drawable.round_blue);
+        if (deviceStates.get(position).isConnected()) view.setImageResource(R.drawable.round_blue);
     }
 
     private class ViewHolder {

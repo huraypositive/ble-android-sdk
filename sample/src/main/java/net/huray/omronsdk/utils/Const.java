@@ -10,12 +10,15 @@ import java.util.Map;
 public class Const {
     public static final String EXTRA_DEVICE_TYPE = "EXTRA_DEVICE_TYPE";
 
-    public static final String PREF_NAME = "Phd.Pref";
-    public static final String PREF_OMRON_BP_DEVICE_ADDRESS = "PREF_OMRON_BP_DEVICE_ADDRESS";
-    public static final String PREF_OMRON_WEIGHT_DEVICE_ADDRESS = "PREF_OMRON_WEIGHT_DEVICE_ADDRESS";
-    public static final String PREF_OMRON_WEIGHT_DEVICE_USER_INDEX = "PREF_OMRON_WEIGHT_DEVICE_USER_INDEX";
-    public static final String PREF_OMRON_WEIGHT_DEVICE_SEQ = "PREF_OMRON_WEIGHT_DEVICE_SEQNUM";
-    public static final String PREF_OMRON_WEIGHT_DEVICE_DB_CHANGE_KEY = "PREF_OMRON_WEIGHT_DEVICE_DB_CHANGE_KEY";
+    public static final String PREF_NAME = "PREF_NAME.Pref";
+    public static final String PREF_HEM_9200T_ADDRESS = "PREF_HEM_9200T_ADDRESS";
+
+    public static final String PREF_HEM_7155T_ADDRESS = "PREF_HEM_7155T_ADDRESS";
+
+    public static final String PREF_HBF_222T_ADDRESS = "PREF_HBF_222T_ADDRESS";
+    public static final String PREF_HBF_222T_USER_INDEX = "PREF_HBF_222T_USER_INDEX";
+    public static final String PREF_HBF_222T_SEQUENCE_NUMBER = "PREF_HBF_222T_SEQUENCE_NUMBER";
+    public static final String PREF_HBF_222T_DB_CHANGE_KEY = "PREF_HBF_222T_DB_CHANGE_KEY";
 
     // For Test Only
     public static Map<OHQUserDataKey, Object> getDemoUser() {

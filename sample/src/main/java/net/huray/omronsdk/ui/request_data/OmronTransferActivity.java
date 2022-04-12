@@ -15,7 +15,7 @@ import net.huray.omronsdk.OmronDeviceManager;
 import net.huray.omronsdk.R;
 import net.huray.omronsdk.ble.entity.SessionData;
 import net.huray.omronsdk.ble.entity.WeightDeviceInfo;
-import net.huray.omronsdk.ble.enumerate.DeviceType;
+import net.huray.omronsdk.ble.enumerate.OmronDeviceType;
 import net.huray.omronsdk.ble.enumerate.OHQCompletionReason;
 import net.huray.omronsdk.ble.enumerate.OHQMeasurementRecordKey;
 import net.huray.omronsdk.ble.enumerate.OHQSessionType;
@@ -33,7 +33,7 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
 
     private OmronDeviceManager omronManager;
     private OmronDataAdapter adapter;
-    private DeviceType deviceType;
+    private OmronDeviceType omronDeviceType;
 
     private ConstraintLayout progressBar;
 
@@ -49,12 +49,12 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
 
     private void setDeviceType() {
         int deviceTypeNumber = getIntent().getIntExtra(Const.EXTRA_DEVICE_TYPE, 0);
-        deviceType = DeviceType.getDeviceType(deviceTypeNumber);
+        omronDeviceType = OmronDeviceType.getDeviceType(deviceTypeNumber);
     }
 
     private void initViews() {
         TextView tvTitle = findViewById(R.id.tv_request_omron_title);
-        tvTitle.setText(deviceType.getName());
+        tvTitle.setText(omronDeviceType.getName());
 
         Button btnRequest = findViewById(R.id.btn_request_omron_data);
         btnRequest.setOnClickListener(v -> requestData());
@@ -62,7 +62,7 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
         TextView tvDisconnect = findViewById(R.id.tv_disconnect_omron_device);
         tvDisconnect.setOnClickListener(v -> showConfirmDialog());
 
-        adapter = new OmronDataAdapter(this, deviceType);
+        adapter = new OmronDataAdapter(this, omronDeviceType);
         ListView listView = findViewById(R.id.lv_requested_data_list);
         listView.setAdapter(adapter);
 
@@ -73,21 +73,21 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
         Button btnStop = findViewById(R.id.btn_stop_connection);
         btnStop.setOnClickListener(v -> omronManager.cancelSession());
 
-        if (deviceType.isWeightDevice()) {
+        if (omronDeviceType.isHBF222F()) {
             userIndexContainer.setVisibility(View.VISIBLE);
-            tvUserIndex.setText(String.valueOf(PrefUtils.getOmronBleWeightDeviceUserIndex()));
+            tvUserIndex.setText(String.valueOf(PrefUtils.getBodyCompositionMonitor_HBF222T_UserIndex()));
         }
     }
 
     private void requestData() {
         showLoadingView();
 
-        if (deviceType.isBpDevice()) {
-            omronManager.requestBpData(PrefUtils.getOmronBleBpDeviceAddress());
+        if (omronDeviceType.is9200T()) {
+            omronManager.requestBpData(PrefUtils.getBpMonitor_HEM9200T_Address());
             return;
         }
 
-        WeightDeviceInfo info = PrefUtils.getOmronWeightTransferInfo();
+        WeightDeviceInfo info = PrefUtils.getBodyCompositionMonitor_HBF222T_TransferInfo();
         omronManager.requestWeightData(info);
     }
 
@@ -107,12 +107,12 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
     }
 
     private void disconnectDevice() {
-        if (deviceType.isWeightDevice()) {
+        if (omronDeviceType.isHBF222F()) {
             PrefUtils.removeOmronWeightDeice();
         }
 
-        if (deviceType.isBpDevice()) {
-            PrefUtils.setOmronBleBpDeviceAddress(null);
+        if (omronDeviceType.is9200T()) {
+            PrefUtils.setBpMonitor_HEM9200T_DeviceAddress(null);
         }
 
         finish();
@@ -120,7 +120,7 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
 
     private void initDeviceManager() {
         omronManager = new OmronDeviceManager(
-                deviceType.getOmronDeviceCategory(),
+                omronDeviceType.getOmronDeviceCategory(),
                 OHQSessionType.TRANSFER,
                 this);
     }
@@ -159,16 +159,16 @@ public class OmronTransferActivity extends AppCompatActivity implements OmronDev
 
         Toast.makeText(this, getString(R.string.success_to_receive_data), Toast.LENGTH_SHORT).show();
 
-        if (deviceType.isBpDevice()) {
+        if (omronDeviceType.is9200T()) {
              updateBpData(results);
             return;
         }
 
-        if (deviceType.isWeightDevice()) {
+        if (omronDeviceType.isHBF222F()) {
             updateWeightData(results);
 
             if (sessionData.getSequenceNumberOfLatestRecord() != null) {
-                PrefUtils.setOmronBleWeightDeviceSequenceNumber(sessionData.getSequenceNumberOfLatestRecord());
+                PrefUtils.setBodyCompositionMonitor_HBF222T_SequenceNumber(sessionData.getSequenceNumberOfLatestRecord());
             }
 
             if (omronManager.isUserInfoChanged(sessionData, Const.getDemoUser())) {

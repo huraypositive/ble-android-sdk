@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import net.huray.omronsdk.R;
 import net.huray.omronsdk.ble.entity.DiscoveredDevice;
-import net.huray.omronsdk.ble.enumerate.DeviceType;
+import net.huray.omronsdk.ble.enumerate.OmronDeviceType;
 import net.huray.omronsdk.model.Device;
 
 import java.util.ArrayList;
@@ -18,19 +18,19 @@ import java.util.List;
 
 public class DeviceRegisterAdapter extends BaseAdapter {
     private final Context context;
-    private final DeviceType deviceType;
+    private final OmronDeviceType omronDeviceType;
 
     private final List<Device> devices = new ArrayList<>();
 
-    public DeviceRegisterAdapter(Context context, DeviceType deviceType) {
+    public DeviceRegisterAdapter(Context context, OmronDeviceType omronDeviceType) {
         this.context = context;
-        this.deviceType = deviceType;
+        this.omronDeviceType = omronDeviceType;
     }
 
     public void updateOmronDevices(List<DiscoveredDevice> datum) {
         devices.clear();
         for (DiscoveredDevice device : datum) {
-            devices.add(new Device(deviceType.getName(), device.getAddress()));
+            devices.add(new Device(omronDeviceType.getName(), device.getAddress()));
         }
         notifyDataSetChanged();
     }

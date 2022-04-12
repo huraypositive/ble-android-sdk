@@ -1,9 +1,10 @@
 # Omron Android SDK
-오므론 블루투스 기기 SDK
+오므론 블루투스 기기 SDK의 쉬운 사용을 위한 라이브러리
 
 ## 적용 기기
 - 오므론 체성분계 [Omron HBF-222T]
 - 오므론 혈압계 [Omron HEM-9200T]
+- 오므론 혈압계 [Omron HEM-7155T]
 
 ## 의존성 추가
 ```gradle
@@ -128,11 +129,11 @@ private void connectBpDevice(int position) {
 public classRegisterActivity extends AppCompatActivity implements OmronDeviceManager.TransferListener {
     // 기기에서 측정 완료 후 아래 데이터 요처 메서드 호출
     private void requestData() {
-        if (deviceType.isBpDevice) {
+        if (omronDeviceType.isBpDevice) {
             omronManager.requestBpData(deviceAddress);
         }
 
-        if (deviceType.isWeightDevice) {
+        if (omronDeviceType.isWeightDevice) {
             omronManager.requestWeightData(deviceInfo)
         }
     }
@@ -153,12 +154,12 @@ public classRegisterActivity extends AppCompatActivity implements OmronDeviceMan
             return;
         }
 
-        if (deviceType.isBpDevice()) {
+        if (omronDeviceType.isBpDevice()) {
              updateBpData(results);
             return;
         }
 
-        if (deviceType.isWeightDevice()) {
+        if (omronDeviceType.isWeightDevice()) {
             updateWeightData(results);
             saveSequenceNumber(sessionData.getSequenceNumberOfLatestRecord());
 

@@ -8,7 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import net.huray.omronsdk.R;
-import net.huray.omronsdk.ble.enumerate.DeviceType;
+import net.huray.omronsdk.ble.enumerate.OmronDeviceType;
 import net.huray.omronsdk.model.BpData;
 import net.huray.omronsdk.model.WeightData;
 
@@ -17,14 +17,14 @@ import java.util.List;
 
 public class OmronDataAdapter extends BaseAdapter {
     private final Context context;
-    private final DeviceType deviceType;
+    private final OmronDeviceType omronDeviceType;
 
     private final List<WeightData> weightDataList = new ArrayList<>();
     private final List<BpData> bpDataList = new ArrayList<>();
 
-    public OmronDataAdapter(Context context, DeviceType deviceType) {
+    public OmronDataAdapter(Context context, OmronDeviceType omronDeviceType) {
         this.context = context;
-        this.deviceType = deviceType;
+        this.omronDeviceType = omronDeviceType;
     }
 
     public void addWeightData(List<WeightData> data) {
@@ -39,7 +39,7 @@ public class OmronDataAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        if (deviceType.isBpDevice()) {
+        if (omronDeviceType.is9200T()) {
             return bpDataList.size();
         }
 
@@ -48,7 +48,7 @@ public class OmronDataAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int i) {
-        if (deviceType.isBpDevice()) {
+        if (omronDeviceType.is9200T()) {
             return bpDataList.get(i);
         }
 
@@ -65,13 +65,13 @@ public class OmronDataAdapter extends BaseAdapter {
         final LayoutInflater inflater = LayoutInflater.from(context);
 
         if (view == null) {
-            switch (deviceType) {
-                case OMRON_WEIGHT:
+            switch (omronDeviceType) {
+                case BODY_COMPOSITION_MONITOR_HBF_222F:
                     view = inflater.inflate(R.layout.item_omron_weight_data, parent, false);
                     setWeightDataView(view, position);
                     break;
 
-                case OMRON_BP:
+                case BP_MONITOR_HEM_9200T:
                     view = inflater.inflate(R.layout.item_omron_bp_data, parent, false);
                     setBpDatView(view, position);
                     break;
