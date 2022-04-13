@@ -12,7 +12,7 @@ import net.huray.omronsdk.utils.PrefUtils
 class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
     RecyclerView.Adapter<DeviceListViewHolder>() {
 
-    private val deviceStates = mutableListOf<DeviceStateData>()
+    private val deviceStates = mutableListOf<DeviceStatus>()
 
     init {
         initDeviceList()
@@ -59,19 +59,19 @@ class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
 
     private fun initDeviceItems() {
         deviceStates.add(
-            DeviceStateData(
+            DeviceStatus(
                 OmronDeviceType.BODY_COMPOSITION_MONITOR_HBF_222F,
                 PrefUtils.getBodyCompositionMonitorHbf222tAddress() != null
             )
         )
         deviceStates.add(
-            DeviceStateData(
+            DeviceStatus(
                 OmronDeviceType.BP_MONITOR_HEM_9200T,
                 PrefUtils.getBpMonitorHem9200tAddress() != null
             )
         )
         deviceStates.add(
-            DeviceStateData(
+            DeviceStatus(
                 OmronDeviceType.BP_MONITOR_HEM_7155T,
                 PrefUtils.getBpMonitorHem7155tAddress() != null
             )
