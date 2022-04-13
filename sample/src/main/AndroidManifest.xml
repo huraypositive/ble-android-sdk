@@ -15,7 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.OmronDeviceSdk" >
-        <activity android:name=".ui.request_data.OmronTransferActivity" />
+        <activity android:name=".ui.transfer.DeviceTransferActivity" />
         <activity android:name=".ui.device_list.DeviceListActivity"
             android:exported="true">
             <intent-filter>
@@ -24,7 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.register.OmronDeviceRegisterActivity" />
+        <activity android:name=".ui.register.DeviceRegisterActivity" />
     </application>
 
 </manifest>

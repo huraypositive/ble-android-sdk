@@ -9,8 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import net.huray.omronsdk.databinding.ActivityDeviceListBinding
-import net.huray.omronsdk.ui.register.OmronDeviceRegisterActivity
-import net.huray.omronsdk.ui.request_data.OmronTransferActivity
+import net.huray.omronsdk.ui.register.DeviceRegisterActivity
+import net.huray.omronsdk.ui.transfer.DeviceTransferActivity
 import net.huray.omronsdk.utils.Const
 
 class DeviceListActivity : AppCompatActivity(), DeviceItemClickListener {
@@ -54,13 +54,13 @@ class DeviceListActivity : AppCompatActivity(), DeviceItemClickListener {
 
     private fun moveToActivity(isConnected: Boolean, deviceNumber: Int) {
         if (isConnected) {
-            val intent = Intent(this, OmronTransferActivity::class.java)
+            val intent = Intent(this, DeviceTransferActivity::class.java)
             intent.putExtra(Const.EXTRA_DEVICE_TYPE, deviceNumber)
             startActivity(intent)
             return
         }
 
-        val intent = Intent(this, OmronDeviceRegisterActivity::class.java)
+        val intent = Intent(this, DeviceRegisterActivity::class.java)
         intent.putExtra(Const.EXTRA_DEVICE_TYPE, deviceNumber)
         startActivity(intent)
     }

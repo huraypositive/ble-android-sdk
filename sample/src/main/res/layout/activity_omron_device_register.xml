@@ -5,7 +5,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ui.register.OmronDeviceRegisterActivity">
+        tools:context=".ui.register.DeviceRegisterActivity">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tv_scan_title"
@@ -87,12 +87,13 @@
             android:textSize="18sp"
             app:layout_constraintTop_toBottomOf="@+id/radio_group" />
 
-        <ListView
-            android:id="@+id/lv_scanned_device_list"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_scanned_device_list"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_scanned_devices"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:listitem="@layout/item_scanned_device" />
 
         <androidx.constraintlayout.widget.ConstraintLayout

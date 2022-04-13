@@ -1,4 +1,4 @@
-package net.huray.omronsdk.ui.request_data
+package net.huray.omronsdk.ui.transfer
 
 import android.content.DialogInterface
 import android.os.Bundle
@@ -22,16 +22,15 @@ import net.huray.omronsdk.ble.enumerate.OHQCompletionReason
 import net.huray.omronsdk.ble.entity.SessionData
 import net.huray.omronsdk.ble.enumerate.OHQMeasurementRecordKey
 import net.huray.omronsdk.databinding.ActivityOmronRequestBinding
-import net.huray.omronsdk.model.BpData
-import net.huray.omronsdk.model.WeightData
+import net.huray.omronsdk.model.OmronHealthData
 import net.huray.omronsdk.utils.Const
 import java.math.BigDecimal
 import java.util.stream.Collectors
 
-class OmronTransferActivity : AppCompatActivity(), TransferListener {
+class DeviceTransferActivity : AppCompatActivity(), TransferListener {
     private lateinit var binding: ActivityOmronRequestBinding
 
-    private lateinit var adapter: OmronDataAdapter
+    private lateinit var adapter: DeviceTransferAdapter
     private lateinit var omronDeviceType: OmronDeviceType
     private lateinit var omronManager: OmronDeviceManager
 
@@ -44,31 +43,31 @@ class OmronTransferActivity : AppCompatActivity(), TransferListener {
         initViews()
     }
 
-    private fun initViews() {
-        binding.tvIndexTitle.text = omronDeviceType.getName()
-        binding.btnRequestOmronData.setOnClickListener { requestData() }
-        binding.tvDisconnectOmronDevice.setOnClickListener { showConfirmDialog() }
-
-        binding.lvRequestedDataList.adapter = adapter
-        binding.btnStopConnection.setOnClickListener { omronManager.cancelSession() }
-
-        if (omronDeviceType.isHBF222F) {
-            binding.constraintUserIndex.visibility = View.VISIBLE
-            binding.tvUserIndex.text = getBodyCompositionMonitorHbf222tUserIndex().toString()
-        }
-    }
-
     private fun initOmronManager() {
         val typeNumber = intent.getIntExtra(Const.EXTRA_DEVICE_TYPE, 0)
         omronDeviceType = OmronDeviceType.getDeviceType(typeNumber)
 
         omronManager = OmronDeviceManager(
             omronDeviceType.omronDeviceCategory,
-            OHQSessionType.REGISTER,
+            OHQSessionType.TRANSFER,
             this
         )
 
-        adapter = OmronDataAdapter(this, omronDeviceType)
+        adapter = DeviceTransferAdapter(omronDeviceType)
+    }
+
+    private fun initViews() {
+        binding.tvIndexTitle.text = omronDeviceType.getName()
+        binding.btnRequestOmronData.setOnClickListener { requestData() }
+        binding.tvDisconnectOmronDevice.setOnClickListener { showConfirmDialog() }
+
+        binding.rvRequestedDataList.adapter = adapter
+        binding.btnStopConnection.setOnClickListener { omronManager.cancelSession() }
+
+        if (omronDeviceType.isHBF222F) {
+            binding.constraintUserIndex.visibility = View.VISIBLE
+            binding.tvUserIndex.text = getBodyCompositionMonitorHbf222tUserIndex().toString()
+        }
     }
 
     private fun requestData() {
@@ -179,27 +178,27 @@ class OmronTransferActivity : AppCompatActivity(), TransferListener {
         val data = results!!.stream()
             .map { data: Map<OHQMeasurementRecordKey, Any> -> mapBpResult(data) }
             .collect(Collectors.toList())
-        adapter.addBpData(data)
+        adapter.updateHealthData(data)
     }
 
     private fun updateWeightData(results: List<Map<OHQMeasurementRecordKey, Any>>?) {
         val data = results!!.stream()
             .map { data: Map<OHQMeasurementRecordKey, Any> -> mapWeightResult(data) }
             .collect(Collectors.toList())
-        adapter.addWeightData(data)
+        adapter.updateHealthData(data)
     }
 
-    private fun mapWeightResult(data: Map<OHQMeasurementRecordKey, Any>): WeightData {
-        return WeightData(
-            data[OHQMeasurementRecordKey.TimeStampKey] as String?,
+    private fun mapWeightResult(data: Map<OHQMeasurementRecordKey, Any>): OmronHealthData.WeightData {
+        return OmronHealthData.WeightData(
+            data[OHQMeasurementRecordKey.TimeStampKey] as String,
             (data[OHQMeasurementRecordKey.BodyFatPercentageKey] as BigDecimal?)!!.toFloat(),
             (data[OHQMeasurementRecordKey.WeightKey] as BigDecimal?)!!.toFloat()
         )
     }
 
-    private fun mapBpResult(data: Map<OHQMeasurementRecordKey, Any>): BpData {
-        return BpData(
-            data[OHQMeasurementRecordKey.TimeStampKey] as String?,
+    private fun mapBpResult(data: Map<OHQMeasurementRecordKey, Any>): OmronHealthData.BpData {
+        return OmronHealthData.BpData(
+            data[OHQMeasurementRecordKey.TimeStampKey] as String,
             (data[OHQMeasurementRecordKey.SystolicKey] as BigDecimal?)!!.toFloat(),
             (data[OHQMeasurementRecordKey.DiastolicKey] as BigDecimal?)!!.toFloat(),
             (data[OHQMeasurementRecordKey.PulseRateKey] as BigDecimal?)!!.toFloat()
