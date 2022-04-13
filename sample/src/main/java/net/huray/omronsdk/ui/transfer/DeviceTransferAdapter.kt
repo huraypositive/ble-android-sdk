@@ -16,7 +16,7 @@ class DeviceTransferAdapter(
     private val omronDeviceType: OmronDeviceType
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val healthDataList: MutableList<OmronHealthData> = ArrayList()
+    private val healthDataList = mutableListOf<OmronHealthData>()
 
     override fun getItemViewType(position: Int): Int {
         return omronDeviceType.number
@@ -26,7 +26,13 @@ class DeviceTransferAdapter(
         val itemRes = if (omronDeviceType.isHBF222F) R.layout.item_omron_weight_data
         else R.layout.item_omron_bp_data
 
-        val view = LayoutInflater.from(parent.context).inflate(itemRes, parent, false)
+        val view = LayoutInflater
+            .from(parent.context)
+            .inflate(
+                itemRes,
+                parent,
+                false
+            )
 
         if (omronDeviceType.isHBF222F) return WeightDataViewHolder(view)
         return BpDataViewHolder(view)
@@ -41,8 +47,7 @@ class DeviceTransferAdapter(
                 )
             }
 
-            omronDeviceType.is9200T ||
-            omronDeviceType.is7155T -> {
+            omronDeviceType.is9200T || omronDeviceType.is7155T -> {
                 setBpDatView(
                     holder = holder as BpDataViewHolder,
                     bpData = healthDataList[position] as OmronHealthData.BpData
@@ -55,11 +60,15 @@ class DeviceTransferAdapter(
 
     @SuppressLint("NotifyDataSetChanged")
     fun updateHealthData(data: List<OmronHealthData>) {
+        healthDataList.clear()
         healthDataList.addAll(data)
         notifyDataSetChanged()
     }
 
-    private fun setWeightDataView(holder: WeightDataViewHolder, weightData: OmronHealthData.WeightData) {
+    private fun setWeightDataView(
+        holder: WeightDataViewHolder,
+        weightData: OmronHealthData.WeightData
+    ) {
         holder.tvTimeStamp.text = weightData.timeStamp
         holder.tvWeight.text = weightData.weight.toString()
         holder.tvBodyFat.text = weightData.bodyFat.toString()

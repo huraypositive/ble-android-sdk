@@ -1,5 +1,6 @@
 package net.huray.omronsdk.ui.device_list
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -18,8 +19,13 @@ class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceListViewHolder {
-        val view =
-            LayoutInflater.from(parent.context).inflate(R.layout.item_device_list, parent, false)
+        val view = LayoutInflater
+            .from(parent.context)
+            .inflate(
+                R.layout.item_device_list,
+                parent, false
+            )
+
         return DeviceListViewHolder(view)
     }
 
@@ -45,6 +51,7 @@ class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
         if (deviceStates[position].isConnected) view!!.setImageResource(R.drawable.round_blue)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun initDeviceList() {
         initDeviceItems()
         notifyDataSetChanged()

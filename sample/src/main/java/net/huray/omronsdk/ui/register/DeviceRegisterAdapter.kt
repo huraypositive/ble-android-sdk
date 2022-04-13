@@ -17,8 +17,14 @@ class DeviceRegisterAdapter(
     private val devices: MutableList<Device> = ArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceRegisterViewHolder {
-        val view =
-            LayoutInflater.from(parent.context).inflate(R.layout.item_scanned_device, parent, false)
+        val view = LayoutInflater
+            .from(parent.context)
+            .inflate(
+                R.layout.item_scanned_device,
+                parent,
+                false
+            )
+
         return DeviceRegisterViewHolder(view)
     }
 
