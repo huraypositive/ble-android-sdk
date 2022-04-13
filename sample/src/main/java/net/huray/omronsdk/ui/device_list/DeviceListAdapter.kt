@@ -47,17 +47,19 @@ class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
         return position.toLong()
     }
 
-    private fun setIndicator(view: ImageView?, position: Int) {
-        if (deviceStates[position].isConnected) view!!.setImageResource(R.drawable.round_blue)
-    }
-
     @SuppressLint("NotifyDataSetChanged")
-    private fun initDeviceList() {
+    fun initDeviceList() {
         initDeviceItems()
         notifyDataSetChanged()
     }
 
+    private fun setIndicator(view: ImageView?, position: Int) {
+        if (deviceStates[position].isConnected) view!!.setImageResource(R.drawable.round_blue)
+    }
+
     private fun initDeviceItems() {
+        deviceStates.clear()
+
         deviceStates.add(
             DeviceStatus(
                 OmronDeviceType.BODY_COMPOSITION_MONITOR_HBF_222F,

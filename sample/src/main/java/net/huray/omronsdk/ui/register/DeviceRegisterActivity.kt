@@ -3,33 +3,33 @@ package net.huray.omronsdk.ui.register
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.*
-import net.huray.omronsdk.utils.PrefUtils.saveBodyCompositionMonitorHbf222tAddress
-import net.huray.omronsdk.utils.PrefUtils.saveBodyCompositionMonitorHbf222tUserIndex
-import net.huray.omronsdk.utils.PrefUtils.saveBpMonitorHem9200tDeviceAddress
-import androidx.appcompat.app.AppCompatActivity
-import net.huray.omronsdk.OmronDeviceManager.RegisterListener
-import net.huray.omronsdk.ble.enumerate.OmronDeviceType
-import net.huray.omronsdk.OmronDeviceManager
+import android.widget.RadioButton
+import android.widget.Toast
 import net.huray.omronsdk.R
-import net.huray.omronsdk.ble.enumerate.OHQSessionType
-import net.huray.omronsdk.ble.entity.WeightDeviceInfo
-import net.huray.omronsdk.ui.transfer.DeviceTransferActivity
-import net.huray.omronsdk.ble.entity.DiscoveredDevice
 import net.huray.omronsdk.ble.enumerate.OHQCompletionReason
+import net.huray.omronsdk.ble.enumerate.OmronDeviceType
+import net.huray.omronsdk.common.BaseActivity
 import net.huray.omronsdk.databinding.ActivityOmronDeviceRegisterBinding
 import net.huray.omronsdk.model.Device
+import net.huray.omronsdk.model.DeviceConnectionState
+import net.huray.omronsdk.ui.transfer.DeviceTransferActivity
 import net.huray.omronsdk.utils.Const
 
-class DeviceRegisterActivity : AppCompatActivity(), RegisterListener, ScannedItemClickListener {
+class DeviceRegisterActivity : BaseActivity(), ScannedItemClickListener {
     private lateinit var binding: ActivityOmronDeviceRegisterBinding
+
+    private val viewModel: DeviceRegisterViewModel by viewModelsFactory {
+        println("woogear...init Viewmodel")
+        val typeNumber = intent.getIntExtra(Const.EXTRA_DEVICE_TYPE, 0)
+        omronDeviceType = OmronDeviceType.getDeviceType(typeNumber)
+
+        DeviceRegisterViewModel(omronDeviceType)
+    }
 
     private lateinit var adapter: DeviceRegisterAdapter
     private lateinit var omronDeviceType: OmronDeviceType
-    private lateinit var omronManager: OmronDeviceManager
 
     private var userIndex = 0
-    private var deviceAddress: String? = null
     private val radioButtons = mutableListOf<Int>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,43 +37,20 @@ class DeviceRegisterActivity : AppCompatActivity(), RegisterListener, ScannedIte
         binding = ActivityOmronDeviceRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        initOmronManager()
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = this
+
+        initObservers()
         initViews()
     }
 
-    override fun onStop() {
-        super.onStop()
-        stopScanOmron()
-    }
-
-    override fun onScanned(discoveredDevices: List<DiscoveredDevice>) {
-        adapter.updateOmronDevices(discoveredDevices)
-    }
-
-    override fun onRegisterFailed(reason: OHQCompletionReason) {
-        hideLoadingView()
-
-        if (reason.isCanceled) {
-            Toast.makeText(this, getString(R.string.connection_canceled), Toast.LENGTH_SHORT).show()
-            setViewForReadyToScan()
+    override fun onDeviceClickListener(device: Device) {
+        if (omronDeviceType.isHBF222F && userIndex == 0) {
+            Toast.makeText(this, getString(R.string.select_user_index), Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (reason.isFailedToConnect || reason.isFailedToRegisterUser || reason.isTimeOut) {
-            Toast.makeText(this, getString(R.string.connection_failed), Toast.LENGTH_SHORT).show()
-            setViewForReadyToScan()
-        }
-    }
-
-    override fun onRegisterSuccess() {
-        hideLoadingView()
-        Toast.makeText(this, getString(R.string.connection_success), Toast.LENGTH_SHORT).show()
-        completeRegister()
-        moveToRequestActivity()
-    }
-
-    override fun onDeviceClickListener(device: Device) {
-        connectDevice(device.address)
+        viewModel.connectDevice(device.address)
     }
 
     fun onRadioButtonClicked(view: View) {
@@ -87,26 +64,58 @@ class DeviceRegisterActivity : AppCompatActivity(), RegisterListener, ScannedIte
         }
     }
 
-    private fun initOmronManager() {
-        val typeNumber = intent.getIntExtra(Const.EXTRA_DEVICE_TYPE, 0)
-        omronDeviceType = OmronDeviceType.getDeviceType(typeNumber)
+    private fun initObservers() {
+        viewModel.connectionEvent.observe(this) { state ->
+            when (state) {
+                is DeviceConnectionState.Scanning -> handleScanningEvent()
+                is DeviceConnectionState.OnScanned -> adapter.updateOmronDevices(state.discoveredDevices)
+                is DeviceConnectionState.ConnectionFailed -> handleCancelEvent(state.reason)
+                is DeviceConnectionState.ConnectionSuccess -> handleSuccessEvent()
+                else -> {}
+            }
+        }
 
-        omronManager = OmronDeviceManager(
-            omronDeviceType.omronDeviceCategory,
-            OHQSessionType.REGISTER,
-            this
-        )
-
-        adapter = DeviceRegisterAdapter(this, omronDeviceType)
+//        viewModel.loadingEvent.observe(this) { isLoading ->
+//            binding.progressContainer.visibility = if (isLoading) View.VISIBLE else View.GONE
+//        }
     }
 
     private fun initViews() {
+        adapter = DeviceRegisterAdapter(this, omronDeviceType)
+
         binding.tvScanTitle.text = omronDeviceType.getName()
         binding.rvScannedDeviceList.adapter = adapter
 
-        binding.btnScan.setOnClickListener { startScanOmron() }
-        binding.btnStopConnection.setOnClickListener { omronManager.cancelSession() }
         initRadioButtons()
+    }
+
+    private fun handleCancelEvent(reason: OHQCompletionReason) {
+        if (reason.isCanceled) {
+            Toast.makeText(this, getString(R.string.connection_canceled), Toast.LENGTH_SHORT).show()
+            setViewForReadyToScan()
+            return
+        }
+
+        if (reason.isFailedToConnect || reason.isFailedToRegisterUser || reason.isTimeOut) {
+            Toast.makeText(this, getString(R.string.connection_failed), Toast.LENGTH_SHORT).show()
+            setViewForReadyToScan()
+            return
+        }
+    }
+
+    private fun handleScanningEvent() {
+        binding.btnScan.text = getString(R.string.stop_scan_device)
+        binding.tvScanDescription.text = getString(R.string.scanning_device)
+    }
+
+    private fun handleSuccessEvent() {
+        Toast.makeText(
+            this,
+            getString(R.string.connection_success),
+            Toast.LENGTH_SHORT
+        ).show()
+
+        moveToRequestActivity()
     }
 
     private fun initRadioButtons() {
@@ -123,76 +132,9 @@ class DeviceRegisterActivity : AppCompatActivity(), RegisterListener, ScannedIte
         binding.radioGroup.visibility = View.INVISIBLE
     }
 
-    private fun startScanOmron() {
-        if (omronManager.isScanning) {
-            stopScanOmron()
-            return
-        }
-
-        omronManager.startScan()
-        binding.btnScan.text = getString(R.string.stop_scan_device)
-        binding.tvScanDescription.text = getString(R.string.scanning_device)
-    }
-
-    private fun stopScanOmron() {
-        omronManager.stopScan()
-        setViewForReadyToScan()
-    }
-
     private fun setViewForReadyToScan() {
         binding.btnScan.text = getString(R.string.start_scan_device)
         binding.tvScanDescription.text = getString(R.string.click_device_scan_button)
-    }
-
-    private fun connectDevice(deviceAddress: String) {
-        this.deviceAddress = deviceAddress
-        if (omronDeviceType.isHBF222F) {
-            connectWeightDevice(deviceAddress)
-            return
-        }
-
-        connectBpDevice(deviceAddress)
-    }
-
-    private fun connectWeightDevice(deviceAddress: String) {
-        if (userIndex == 0) {
-            Toast.makeText(this, getString(R.string.select_user_index), Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val deviceInfo = WeightDeviceInfo.newInstanceForRegister(
-            Const.demoUser,  // This should be real user data in product code
-            deviceAddress,
-            userIndex
-        )
-        omronManager.connectWeightDevice(deviceInfo)
-
-        showLoadingView()
-    }
-
-    private fun connectBpDevice(deviceAddress: String) {
-        omronManager.connectBpDevice(deviceAddress)
-        showLoadingView()
-    }
-
-    private fun showLoadingView() {
-        binding.progressContainer.visibility = View.VISIBLE
-    }
-
-    private fun hideLoadingView() {
-        binding.progressContainer.visibility = View.GONE
-    }
-
-    private fun completeRegister() {
-        requireNotNull(deviceAddress) { "deviceAddress is null" }
-
-        if (omronDeviceType.isHBF222F) {
-            saveBodyCompositionMonitorHbf222tAddress(deviceAddress!!)
-            saveBodyCompositionMonitorHbf222tUserIndex(userIndex)
-            return
-        }
-
-        saveBpMonitorHem9200tDeviceAddress(deviceAddress)
     }
 
     private fun moveToRequestActivity() {

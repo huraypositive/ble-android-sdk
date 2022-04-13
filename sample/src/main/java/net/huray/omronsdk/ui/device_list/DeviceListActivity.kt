@@ -36,8 +36,8 @@ class DeviceListActivity : AppCompatActivity(), DeviceItemClickListener {
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onResume() {
+        adapter.initDeviceList()
         super.onResume()
-        adapter.notifyDataSetChanged()
     }
 
     override fun onItemClicked(isConnected: Boolean, deviceNumber: Int) {

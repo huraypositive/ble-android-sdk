@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout>
+
+    <data>
+        <variable
+            name="viewModel"
+            type="net.huray.omronsdk.ui.register.DeviceRegisterViewModel" />
+
+        <import type="android.view.View"/>
+
+    </data>
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
@@ -36,6 +45,7 @@
             android:layout_margin="10dp"
             android:text="@string/start_scan_device"
             android:textSize="16sp"
+            android:onClick="@{() -> viewModel.startScan()}"
             app:layout_constraintTop_toBottomOf="@id/tv_scan_description" />
 
         <RadioGroup
@@ -101,7 +111,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/colorProgress"
-            android:visibility="gone">
+            tools:visibility="gone"
+            android:visibility="@{viewModel.loadingEvent ? View.VISIBLE : View.GONE}">
 
             <ProgressBar
                 android:id="@+id/progress_bar"
@@ -117,6 +128,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="연결 취소"
+                android:onClick="@{() -> viewModel.cancel()}"
                 app:layout_constraintTop_toBottomOf="@+id/progress_bar"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -125,4 +137,5 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+    
 </layout>
