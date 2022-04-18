@@ -21,13 +21,14 @@ import net.huray.omronsdk.ble.enumerate.OHQSessionType
 import net.huray.omronsdk.ble.enumerate.OHQCompletionReason
 import net.huray.omronsdk.ble.entity.SessionData
 import net.huray.omronsdk.ble.enumerate.OHQMeasurementRecordKey
+import net.huray.omronsdk.common.BaseActivity
 import net.huray.omronsdk.databinding.ActivityOmronRequestBinding
 import net.huray.omronsdk.model.OmronHealthData
 import net.huray.omronsdk.utils.Const
 import java.math.BigDecimal
 import java.util.stream.Collectors
 
-class DeviceTransferActivity : AppCompatActivity(), TransferListener {
+class DeviceTransferActivity : BaseActivity(), TransferListener {
     private lateinit var binding: ActivityOmronRequestBinding
 
     private lateinit var adapter: DeviceTransferAdapter

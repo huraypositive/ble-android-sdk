@@ -19,7 +19,6 @@ class DeviceRegisterActivity : BaseActivity(), ScannedItemClickListener {
     private lateinit var binding: ActivityOmronDeviceRegisterBinding
 
     private val viewModel: DeviceRegisterViewModel by viewModelsFactory {
-        println("woogear...init Viewmodel")
         val typeNumber = intent.getIntExtra(Const.EXTRA_DEVICE_TYPE, 0)
         omronDeviceType = OmronDeviceType.getDeviceType(typeNumber)
 
