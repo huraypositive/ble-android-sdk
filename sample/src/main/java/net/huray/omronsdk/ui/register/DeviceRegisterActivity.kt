@@ -49,7 +49,10 @@ class DeviceRegisterActivity : BaseActivity(), ScannedItemClickListener {
             return
         }
 
-        viewModel.connectDevice(device.address)
+        viewModel.connectDevice(
+            deviceAddress = device.address,
+            userIndex = userIndex
+        )
     }
 
     fun onRadioButtonClicked(view: View) {
@@ -73,10 +76,6 @@ class DeviceRegisterActivity : BaseActivity(), ScannedItemClickListener {
                 else -> {}
             }
         }
-
-//        viewModel.loadingEvent.observe(this) { isLoading ->
-//            binding.progressContainer.visibility = if (isLoading) View.VISIBLE else View.GONE
-//        }
     }
 
     private fun initViews() {

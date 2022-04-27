@@ -60,6 +60,7 @@ class DeviceRegisterViewModel(
     override fun onRegisterSuccess() {
         setLoadingState(false)
         completeRegister()
+        _connectionEvent.postValue(DeviceConnectionState.ConnectionSuccess)
     }
 
     fun startScan() {
@@ -74,14 +75,14 @@ class DeviceRegisterViewModel(
         omronManager.cancelSession()
     }
 
-    fun connectDevice(deviceAddress: String) {
+    fun connectDevice(deviceAddress: String, userIndex: Int) {
         setLoadingState(true)
         _connectionEvent.value = DeviceConnectionState.Connecting
 
         this.deviceAddress = deviceAddress
 
         if (omronDeviceType.isHBF222F) {
-            connectWeightDevice(deviceAddress)
+            connectWeightDevice(deviceAddress, userIndex)
             return
         }
 
@@ -91,9 +92,11 @@ class DeviceRegisterViewModel(
         }
     }
 
-    private fun connectWeightDevice(deviceAddress: String) {
+    private fun connectWeightDevice(deviceAddress: String, userIndex: Int) {
+        this.userIndex = userIndex
+
         val deviceInfo = WeightDeviceInfo.newInstanceForRegister(
-            Const.demoUser,  // This should be real user data in product code
+            Const.demoUser,
             deviceAddress,
             userIndex
         )
@@ -104,17 +107,20 @@ class DeviceRegisterViewModel(
     private fun completeRegister() {
         requireNotNull(deviceAddress) { "deviceAddress is null" }
 
-        _connectionEvent.postValue(DeviceConnectionState.ConnectionSuccess)
-
-        if (omronDeviceType.isHBF222F) {
-            PrefUtils.saveBodyCompositionMonitorHbf222tAddress(deviceAddress!!)
-            PrefUtils.saveBodyCompositionMonitorHbf222tUserIndex(userIndex)
-            return
-        }
-
-        if (omronDeviceType.is9200T) {
-            PrefUtils.saveBpMonitorHem9200tDeviceAddress(deviceAddress)
-            return
+        when {
+            omronDeviceType.isHBF222F -> {
+                PrefUtils.saveBodyCompositionMonitorHbf222tAddress(deviceAddress!!)
+                PrefUtils.saveBodyCompositionMonitorHbf222tUserIndex(userIndex)
+                return
+            }
+            omronDeviceType.is9200T -> {
+                PrefUtils.saveBpMonitorHem9200tDeviceAddress(deviceAddress)
+                return
+            }
+            omronDeviceType.is7155T -> {
+                PrefUtils.saveBpMonitorHem7155tAddress(deviceAddress)
+                return
+            }
         }
     }
 
