@@ -54,7 +54,10 @@ class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
     }
 
     private fun setIndicator(view: ImageView?, position: Int) {
-        if (deviceStates[position].isConnected) view!!.setImageResource(R.drawable.round_blue)
+        val indicatorRes = if (deviceStates[position].isConnected)  R.drawable.round_blue
+        else R.drawable.round_red
+        
+        view!!.setImageResource(indicatorRes)
     }
 
     private fun initDeviceItems() {

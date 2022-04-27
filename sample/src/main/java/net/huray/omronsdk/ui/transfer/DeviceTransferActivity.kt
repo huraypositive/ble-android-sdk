@@ -12,7 +12,6 @@ import net.huray.omronsdk.utils.PrefUtils.removeOmronWeightDeice
 import net.huray.omronsdk.utils.PrefUtils.saveBpMonitorHem9200tDeviceAddress
 import net.huray.omronsdk.utils.PrefUtils.saveBodyCompositionMonitorHbf222tSequenceNumber
 import net.huray.omronsdk.utils.PrefUtils.saveOmronBleDataBaseIncrementKey
-import androidx.appcompat.app.AppCompatActivity
 import net.huray.omronsdk.OmronDeviceManager.TransferListener
 import net.huray.omronsdk.OmronDeviceManager
 import net.huray.omronsdk.ble.enumerate.OmronDeviceType
@@ -25,6 +24,7 @@ import net.huray.omronsdk.common.BaseActivity
 import net.huray.omronsdk.databinding.ActivityOmronRequestBinding
 import net.huray.omronsdk.model.OmronHealthData
 import net.huray.omronsdk.utils.Const
+import net.huray.omronsdk.utils.PrefUtils.saveBpMonitorHem7155tAddress
 import java.math.BigDecimal
 import java.util.stream.Collectors
 
@@ -105,12 +105,10 @@ class DeviceTransferActivity : BaseActivity(), TransferListener {
     }
 
     private fun disconnectDevice() {
-        if (omronDeviceType.isHBF222F) {
-            removeOmronWeightDeice()
-        }
-
-        if (omronDeviceType.is9200T) {
-            saveBpMonitorHem9200tDeviceAddress(null)
+        when {
+            omronDeviceType.isHBF222F -> removeOmronWeightDeice()
+            omronDeviceType.is9200T -> saveBpMonitorHem9200tDeviceAddress(null)
+            omronDeviceType.is7155T -> saveBpMonitorHem7155tAddress(null)
         }
 
         finish()

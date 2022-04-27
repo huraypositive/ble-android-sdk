@@ -34,7 +34,6 @@ class DeviceListActivity : AppCompatActivity(), DeviceItemClickListener {
         requestPermission()
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     override fun onResume() {
         adapter.initDeviceList()
         super.onResume()
