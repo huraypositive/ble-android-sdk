@@ -7,7 +7,7 @@ sealed class DeviceConnectionState {
 
     object Scanning : DeviceConnectionState()
 
-    data class ConnectionFailed(
+    data class Failed(
         val reason: OHQCompletionReason
     ) : DeviceConnectionState()
 

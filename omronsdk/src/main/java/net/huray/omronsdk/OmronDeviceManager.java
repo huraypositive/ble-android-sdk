@@ -188,7 +188,7 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
 
     @Override
     public void onScan(@NonNull @NotNull List<DiscoveredDevice> discoveredDevices) {
-        throwExceptionForScanListener();
+        validateScanListener();
         registerListener.onScanned(discoveredDevices);
     }
 
@@ -212,12 +212,12 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
         }
 
         if (sessionType == OHQSessionType.REGISTER) {
-            throwExceptionForScanListener();
+            validateScanListener();
             registerListener.onRegisterSuccess();
             return;
         }
 
-        throwExceptionForTransferListener();
+        validateTransferListener();
         transferListener.onTransferSuccess(sessionData);
 
     }
@@ -232,13 +232,13 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
         }
     }
 
-    private void throwExceptionForScanListener() throws IllegalStateException {
+    private void validateScanListener() throws IllegalStateException {
         if (registerListener == null) {
             throw new IllegalStateException("RegisterListener is not initialized");
         }
     }
 
-    private void throwExceptionForTransferListener() throws IllegalStateException {
+    private void validateTransferListener() throws IllegalStateException {
         if (transferListener == null) {
             throw new IllegalStateException("TransferListener is not initialized");
         }

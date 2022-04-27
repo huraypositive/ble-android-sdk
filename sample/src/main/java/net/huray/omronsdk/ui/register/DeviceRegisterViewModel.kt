@@ -54,7 +54,7 @@ class DeviceRegisterViewModel(
 
         if (reason == null) return
 
-        _connectionEvent.postValue(DeviceConnectionState.ConnectionFailed(reason))
+        _connectionEvent.postValue(DeviceConnectionState.Failed(reason))
     }
 
     override fun onRegisterSuccess() {

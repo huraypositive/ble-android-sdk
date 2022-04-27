@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout>
 
+    <data>
+
+        <variable
+            name="viewModel"
+            type="net.huray.omronsdk.ui.transfer.DeviceTransferViewModel" />
+
+        <import type="android.view.View" />
+
+    </data>
+
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
@@ -14,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:gravity="center"
-            android:text="OMRON 혈압계"
+            tools:text="OMRON 혈압계"
             android:textColor="@color/design_default_color_on_secondary"
             android:textSize="30sp"
             app:layout_constraintTop_toTopOf="parent" />
@@ -67,6 +77,7 @@
             android:layout_margin="10dp"
             android:text="@string/request_data"
             android:textSize="16sp"
+            android:onClick="@{() -> viewModel.requestData()}"
             app:layout_constraintTop_toBottomOf="@id/constraint_user_index" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -96,7 +107,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/colorProgress"
-            android:visibility="gone">
+            android:visibility="@{viewModel.loadingEvent ? View.VISIBLE : View.GONE}"
+            tools:visibility="gone">
 
             <ProgressBar
                 android:id="@+id/progress_bar"
@@ -112,6 +124,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:onClick="@{() -> viewModel.cancel()}"
                 android:text="취소"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

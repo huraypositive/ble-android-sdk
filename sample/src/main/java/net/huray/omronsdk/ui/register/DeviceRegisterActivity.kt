@@ -18,18 +18,18 @@ import net.huray.omronsdk.utils.Const
 class DeviceRegisterActivity : BaseActivity(), ScannedItemClickListener {
     private lateinit var binding: ActivityOmronDeviceRegisterBinding
 
+    private lateinit var adapter: DeviceRegisterAdapter
+    private lateinit var omronDeviceType: OmronDeviceType
+
+    private var userIndex = 0
+    private val radioButtons = mutableListOf<Int>()
+
     private val viewModel: DeviceRegisterViewModel by viewModelsFactory {
         val typeNumber = intent.getIntExtra(Const.EXTRA_DEVICE_TYPE, 0)
         omronDeviceType = OmronDeviceType.getDeviceType(typeNumber)
 
         DeviceRegisterViewModel(omronDeviceType)
     }
-
-    private lateinit var adapter: DeviceRegisterAdapter
-    private lateinit var omronDeviceType: OmronDeviceType
-
-    private var userIndex = 0
-    private val radioButtons = mutableListOf<Int>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +71,7 @@ class DeviceRegisterActivity : BaseActivity(), ScannedItemClickListener {
             when (state) {
                 is DeviceConnectionState.Scanning -> handleScanningEvent()
                 is DeviceConnectionState.OnScanned -> adapter.updateOmronDevices(state.discoveredDevices)
-                is DeviceConnectionState.ConnectionFailed -> handleCancelEvent(state.reason)
+                is DeviceConnectionState.Failed -> handleCancelEvent(state.reason)
                 is DeviceConnectionState.ConnectionSuccess -> handleSuccessEvent()
                 else -> {}
             }
