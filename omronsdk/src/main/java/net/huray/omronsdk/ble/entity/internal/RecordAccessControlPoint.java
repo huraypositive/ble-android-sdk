@@ -34,6 +34,11 @@ public class RecordAccessControlPoint {
     }
 
     @NonNull
+    public static Request newDeleteStoredRecords() {
+        return new Request(OpCode.DeleteStoredRecords, Operator.AllRecords, null, null);
+    }
+
+    @NonNull
     public static Response parseResponse(@NonNull byte[] responsePacket) {
         final OpCode opCode = OpCode.valueOf(responsePacket[0]);
         final OpCode requestOpCode;
@@ -68,6 +73,7 @@ public class RecordAccessControlPoint {
     public enum OpCode {
         Reserved((byte) 0x00),
         ReportStoredRecords((byte) 0x01),
+        DeleteStoredRecords((byte) 0x02),
         ReportNumberOfStoredRecords((byte) 0x04),
         NumberOfStoredRecordsResponse((byte) 0x05),
         ResponseCode((byte) 0x06),
@@ -201,6 +207,15 @@ public class RecordAccessControlPoint {
                             throw new AndroidRuntimeException("Invalid operator.");
                     }
                     break;
+                case DeleteStoredRecords:
+                    switch (operator) {
+                        case AllRecords:
+                            packet = new byte[2];
+                            break;
+                        default:
+                            throw new AndroidRuntimeException("Invalid operator.");
+                    }
+                    break;
                 case ReportSequenceNumberOfLatestRecord:
                     packet = new byte[2];
                     break;
@@ -250,3 +265,4 @@ public class RecordAccessControlPoint {
         }
     }
 }
+

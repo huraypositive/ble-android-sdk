@@ -1,6 +1,5 @@
 package net.huray.omronsdk.androidcorebluetooth;
 
-
 import androidx.annotation.NonNull;
 
 public interface CBPeripheralDelegate {

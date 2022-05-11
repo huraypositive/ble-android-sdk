@@ -1,6 +1,5 @@
 package net.huray.omronsdk.ble.advertising;
 
-
 import com.neovisionaries.bluetooth.ble.advertising.ADManufacturerSpecific;
 
 import net.huray.omronsdk.utility.Bytes;
@@ -8,7 +7,6 @@ import net.huray.omronsdk.utility.Bytes;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
-
 
 public class EachUserData extends ADManufacturerSpecific {
     private static final int ENABLE_DATA_TYPE = 0x01;
@@ -19,6 +17,7 @@ public class EachUserData extends ADManufacturerSpecific {
     private int numberOfUser;
     private boolean isTimeNotSet;
     private boolean isPairingMode;
+    private boolean isBluetoothStandardMode;//true:BluetoothStandardMode is supported.
     private EachUserData(int length, int type, byte[] data, int companyId) {
         super(length, type, data, companyId);
         parse(data);
@@ -46,6 +45,8 @@ public class EachUserData extends ADManufacturerSpecific {
         return isPairingMode;
     }
 
+    public boolean isBluetoothStandardMode() { return isBluetoothStandardMode; }
+
     public List<User> getUsers() {
         return users;
     }
@@ -62,6 +63,7 @@ public class EachUserData extends ADManufacturerSpecific {
         numberOfUser = (flags & 0x03) + 1;
         isTimeNotSet = (flags & 0x04) > 0;
         isPairingMode = (flags & 0x08) > 0;
+        isBluetoothStandardMode = (flags & 0x20) > 0;
 
         int offset = USERS_INDEX;
         for (int i = 0; numberOfUser > i; i++) {
@@ -81,6 +83,7 @@ public class EachUserData extends ADManufacturerSpecific {
                 ", numberOfUser=" + numberOfUser +
                 ", isTimeNotSet=" + isTimeNotSet +
                 ", isPairingMode=" + isPairingMode +
+                ", isBluetoothStandardMode=" + isBluetoothStandardMode +
                 '}';
     }
 

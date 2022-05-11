@@ -638,20 +638,21 @@ public class OHQDeviceManager {
                 for (UUID androidUUID : uuids.getUUIDs()) {
                     CBUUID uuid = new CBUUID(androidUUID);
                     OHQLog.d(uuid.toString());
-                    if (OHQUUIDDefines.Service.BodyComposition.uuid().equals(uuid)) {
-                        deviceCategory = OHQDeviceCategory.BodyCompositionMonitor;
-                    } else if (OHQUUIDDefines.Service.BloodPressure.uuid().equals(uuid)) {
+                    if (OHQUUIDDefines.Service.BloodPressure.uuid().equals(uuid)) {
                         deviceCategory = OHQDeviceCategory.BloodPressureMonitor;
                     } else if (OHQUUIDDefines.Service.WeightScale.uuid().equals(uuid)) {
+                        //or Body Composition Monitor
+                        //In Omron device, body composition service is secondary service of weight scale service, it is not included in advertisement data, so we can not distinguish between weight scale and body composition monitor by scanning.
                         deviceCategory = OHQDeviceCategory.WeightScale;
+                    } else if (OHQUUIDDefines.Service.OmronCustomPLXService.uuid().equals(uuid)) {
+                        deviceCategory = OHQDeviceCategory.PulseOximeter;
+                    } else if (OHQUUIDDefines.Service.HealthThermometer.uuid().equals(uuid)) {
+                        deviceCategory = OHQDeviceCategory.HealthThermometer;
                     }
                 }
             } else if (structure instanceof EachUserData) {
                 hasEachUserData = true;
             }
-        }
-        if (OHQDeviceCategory.WeightScale == deviceCategory && hasEachUserData) {
-            deviceCategory = OHQDeviceCategory.BodyCompositionMonitor;
         }
         return deviceCategory;
     }

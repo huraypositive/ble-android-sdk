@@ -1,6 +1,5 @@
 package net.huray.omronsdk.ble.advertising;
 
-
 import androidx.annotation.NonNull;
 
 import com.neovisionaries.bluetooth.ble.advertising.ADStructure;

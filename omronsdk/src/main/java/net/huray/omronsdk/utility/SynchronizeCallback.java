@@ -1,6 +1,5 @@
 package net.huray.omronsdk.utility;
 
-
 import androidx.annotation.NonNull;
 
 import java.util.concurrent.CountDownLatch;

@@ -33,6 +33,10 @@ public class Bytes {
         return (long) parseBytesAsByteBuffer(data, offset, littleEndian, 4).getInt();
     }
 
+    public static Float32 parse4BytesAsFloat32(byte[] data, int offset, boolean littleEndian) {
+        return Float32.valueOf(parseBytesAsByteBuffer(data, offset, littleEndian, 4).getInt());
+    }
+
     private static ByteBuffer parseBytesAsByteBuffer(byte[] data, int offset, boolean littleEndian, int numberOfByte) {
         byte[] buf = new byte[numberOfByte];
         System.arraycopy(data, offset, buf, 0, numberOfByte);

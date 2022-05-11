@@ -6,7 +6,6 @@
 
 package net.huray.omronsdk.ble;
 
-
 import androidx.annotation.NonNull;
 
 import net.huray.omronsdk.androidcorebluetooth.CBUUID;
@@ -88,7 +87,8 @@ class OHQUUIDDefines {
         MeshProvisioningService("1827", "Mesh Provisioning Service"),
         MeshProxyService("1828", "Mesh Proxy Service"),
 
-        OmronOptionalService("5DF5E817-A945-4F81-89C0-3D4E9759C07C", "Omron Optional Service"),;
+        OmronOptionalService("5DF5E817-A945-4F81-89C0-3D4E9759C07C", "Omron Optional Service"),
+        OmronCustomPLXService("6E400001-B5A3-F393-EFA9-E50E24DCCA9E", "Omron Custom PLX Service"),;
         @NonNull
         private final String mUuidString;
         @NonNull
@@ -335,7 +335,10 @@ class OHQUUIDDefines {
         FitnessMachineControlPoint("2AD9", "Fitness Machine Control Point"),
         FitnessMachineStatus("2ADA", "Fitness Machine Status"),
 
-        OmronMeasurementWS("8FF2DDFB-4A52-4CE5-85A4-D2F97917792A", "Omron Measurement(WS)"),;
+        OmronMeasurementWS("8FF2DDFB-4A52-4CE5-85A4-D2F97917792A", "Omron Measurement(WS)"),
+        OmronCustomPLXFeatures("6E4000F0-B5A3-F393-EFA9-E50E24DCCA9E", "Omron Custom PLX Feature"),
+        OmronCustomPLXSpotCheckMeasurement("6E4000F1-B5A3-F393-EFA9-E50E24DCCA9E", "Omron Custom PLX SpotCheckMeasurement"),
+        OmronCustomPLXRecordAccessControlPoint("6E4000F3-B5A3-F393-EFA9-E50E24DCCA9E", "Omron Custom PLX RACP"),;
         @NonNull
         private final String mUuidString;
         @NonNull

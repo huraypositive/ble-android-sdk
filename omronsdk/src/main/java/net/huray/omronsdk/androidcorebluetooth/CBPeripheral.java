@@ -128,12 +128,10 @@ public class CBPeripheral extends AndroidPeripheral {
 
     public void writeValue(@NonNull final byte[] data, @NonNull final CBCharacteristic characteristic, @NonNull final CBCharacteristicWriteType type) {
         CBLog.vMethodIn();
-        characteristic.getBluetoothGattCharacteristic().setValue(data);
-        characteristic.getBluetoothGattCharacteristic().setWriteType(type.value());
         getHandler().post(new Runnable() {
             @Override
             public void run() {
-                mValueUpdatingEventQueue.add(new ValueUpdatingEvent(ValueUpdatingEvent.Type.WriteCharacteristic, characteristic));
+                mValueUpdatingEventQueue.add(new ValueUpdatingEvent(ValueUpdatingEvent.Type.WriteCharacteristic, characteristic, data, type == CBCharacteristicWriteType.WithResponse? true:false));
                 _startValueUpdatingEvent();
             }
         });
@@ -141,11 +139,10 @@ public class CBPeripheral extends AndroidPeripheral {
 
     public void writeValue(@NonNull final byte[] data, @NonNull final CBDescriptor descriptor) {
         CBLog.vMethodIn();
-        descriptor.getBluetoothGattDescriptor().setValue(data);
         getHandler().post(new Runnable() {
             @Override
             public void run() {
-                mValueUpdatingEventQueue.add(new ValueUpdatingEvent(ValueUpdatingEvent.Type.WriteDescriptor, descriptor));
+                mValueUpdatingEventQueue.add(new ValueUpdatingEvent(ValueUpdatingEvent.Type.WriteDescriptor, descriptor, data));
                 _startValueUpdatingEvent();
             }
         });
@@ -211,10 +208,10 @@ public class CBPeripheral extends AndroidPeripheral {
                 result = _readValue(event.descriptor);
                 break;
             case WriteCharacteristic:
-                result = _writeValue(event.characteristic);
+                result = _writeValue(event.characteristic, event.bytesArg, event.boolArg);
                 break;
             case WriteDescriptor:
-                result = _writeValue(event.descriptor);
+                result = _writeValue(event.descriptor, event.bytesArg);
                 break;
             case Notify:
                 result = _setNotifyValue(event.boolArg, event.characteristic);
@@ -292,9 +289,13 @@ public class CBPeripheral extends AndroidPeripheral {
     }
 
     private boolean _writeValue(
-            @NonNull CBCharacteristic characteristic) {
+            @NonNull CBCharacteristic characteristic,
+            byte[] data,
+            boolean need_resp) {
         CBLog.vMethodIn(characteristic.uuid().toString());
 
+        characteristic.getBluetoothGattCharacteristic().setValue(data);
+        characteristic.getBluetoothGattCharacteristic().setWriteType(need_resp == true? BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT:BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
         boolean result = writeCharacteristic(characteristic.getBluetoothGattCharacteristic());
         if (!result) {
             CBLog.e("writeCharacteristic() failed.");
@@ -305,9 +306,11 @@ public class CBPeripheral extends AndroidPeripheral {
     }
 
     private boolean _writeValue(
-            @NonNull final CBDescriptor descriptor) {
+            @NonNull final CBDescriptor descriptor,
+            byte[] data) {
         CBLog.vMethodIn(descriptor.uuid().toString());
 
+        descriptor.getBluetoothGattDescriptor().setValue(data);
         boolean result = writeDescriptor(descriptor.getBluetoothGattDescriptor());
         if (!result) {
             CBLog.e("writeDescriptor() failed.");
@@ -680,11 +683,27 @@ public class CBPeripheral extends AndroidPeripheral {
             this.boolArg = boolArg;
         }
 
+        ValueUpdatingEvent(@NonNull Type type, @NonNull CBCharacteristic characteristic, byte[] bytesArg, boolean boolArg) {
+            this.type = type;
+            this.characteristic = characteristic;
+            this.descriptor = null;
+            this.bytesArg = bytesArg;
+            this.boolArg = boolArg;
+        }
+
         ValueUpdatingEvent(@NonNull Type type, @NonNull CBDescriptor descriptor) {
             this.type = type;
             this.characteristic = null;
             this.descriptor = descriptor;
             this.bytesArg = null;
+            this.boolArg = false;
+        }
+
+        ValueUpdatingEvent(@NonNull Type type, @NonNull CBDescriptor descriptor, byte[] bytesArg) {
+            this.type = type;
+            this.characteristic = null;
+            this.descriptor = descriptor;
+            this.bytesArg = bytesArg;
             this.boolArg = false;
         }
 
