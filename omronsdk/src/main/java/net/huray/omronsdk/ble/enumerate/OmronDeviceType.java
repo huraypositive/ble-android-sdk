@@ -35,7 +35,7 @@ public enum OmronDeviceType {
             return OHQDeviceCategory.WeightScale;
         }
 
-        if (is9200T() || is7155T()) {
+        if (isHEM9200T() || isHEM7155T()) {
             return OHQDeviceCategory.BloodPressureMonitor;
         }
 
@@ -46,11 +46,11 @@ public enum OmronDeviceType {
         return this == BODY_COMPOSITION_MONITOR_HBF_222F;
     }
 
-    public boolean is9200T() {
+    public boolean isHEM9200T() {
         return this == BP_MONITOR_HEM_9200T;
     }
 
-    public boolean is7155T() {
+    public boolean isHEM7155T() {
         return this == BP_MONITOR_HEM_7155T;
     }
 }

@@ -46,32 +46,31 @@ class DeviceTransferViewModel(
         _loadingEvent.postValue(false)
         val results = sessionData?.measurementRecords
 
-        if (results.isNullOrEmpty()) {
-            _noDataEvent.postValue(true)
-            return
-        }
-
-        if (omronDeviceType.is9200T) {
-            updateBloodPressureData(results)
-            return
-        }
-
-        if (omronDeviceType.isHBF222F) {
-            updateBodyCompositionData(results)
-            handleBodyCompositionSettingAfterTransfer(sessionData)
+        when {
+            results.isNullOrEmpty() -> _noDataEvent.postValue(true)
+            omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T -> updateBloodPressureData(results)
+            omronDeviceType.isHBF222F -> {
+                updateBodyCompositionData(results)
+                handleBodyCompositionSettingAfterTransfer(sessionData)
+            }
         }
     }
 
     fun requestData() {
         _loadingEvent.value = true
 
-        if (omronDeviceType.is9200T) {
-            omronManager.requestBpData(PrefUtils.getBpMonitorHem9200tAddress())
-            return
+        when {
+            omronDeviceType.isHEM9200T -> {
+                omronManager.requestBpData(PrefUtils.getBpMonitorHem9200tAddress())
+            }
+            omronDeviceType.isHEM9200T -> {
+                omronManager.requestBpData(PrefUtils.getBpMonitorHem9200tAddress())
+            }
+            omronDeviceType.isHBF222F -> {
+                val info = PrefUtils.getBodyCompositionMonitorHbf222tTransferInfo()
+                omronManager.requestWeightData(info)
+            }
         }
-
-        val info = PrefUtils.getBodyCompositionMonitorHbf222tTransferInfo()
-        omronManager.requestWeightData(info)
     }
 
     fun cancel() {
@@ -81,8 +80,8 @@ class DeviceTransferViewModel(
     fun disconnectDevice() {
         when {
             omronDeviceType.isHBF222F -> PrefUtils.removeOmronWeightDeice()
-            omronDeviceType.is9200T -> PrefUtils.saveBpMonitorHem9200tDeviceAddress(null)
-            omronDeviceType.is7155T -> PrefUtils.saveBpMonitorHem7155tAddress(null)
+            omronDeviceType.isHEM9200T -> PrefUtils.saveBpMonitorHem9200tDeviceAddress(null)
+            omronDeviceType.isHEM7155T -> PrefUtils.saveBpMonitorHem7155tAddress(null)
         }
     }
 

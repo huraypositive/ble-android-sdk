@@ -1,16 +1,12 @@
 package net.huray.omronsdk.ui.transfer
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import net.huray.omronsdk.R
 import net.huray.omronsdk.ble.enumerate.OmronDeviceType
 import net.huray.omronsdk.model.OmronHealthData
-import java.util.ArrayList
 
 class DeviceTransferAdapter(
     private val omronDeviceType: OmronDeviceType
@@ -46,8 +42,7 @@ class DeviceTransferAdapter(
                     weightData = healthDataList[position] as OmronHealthData.WeightData
                 )
             }
-
-            omronDeviceType.is9200T || omronDeviceType.is7155T -> {
+            omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T -> {
                 setBpDatView(
                     holder = holder as BpDataViewHolder,
                     bpData = healthDataList[position] as OmronHealthData.BpData

@@ -138,8 +138,8 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
 
             private void onStarted() {
                 handler.post(() -> {
-                        sessionController.setConfig(OmronOption.getConfig());
-                        sessionController.startSession(deviceAddress, getOptionKeys());
+                    sessionController.setConfig(OmronOption.getConfig());
+                    sessionController.startSession(deviceAddress, getOptionKeys());
                 });
             }
         });
@@ -204,8 +204,10 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
         OHQCompletionReason reason = sessionData.getCompletionReason();
 
         assert reason != null;
-        if (reason.isCanceled() || reason.isFailedToConnect()
-                || reason.isFailedToRegisterUser() || reason.isTimeOut()) {
+        if (reason.isCanceled() ||
+                reason.isFailedToConnect() ||
+                reason.isFailedToRegisterUser() ||
+                reason.isTimeOut()) {
             setSessionFailed(sessionData.getCompletionReason());
             return;
         }
@@ -218,7 +220,6 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
 
         validateTransferListener();
         transferListener.onTransferSuccess(sessionData);
-
     }
 
     private void setSessionFailed(OHQCompletionReason reason) {

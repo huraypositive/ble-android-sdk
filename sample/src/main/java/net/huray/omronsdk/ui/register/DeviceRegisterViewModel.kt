@@ -86,7 +86,7 @@ class DeviceRegisterViewModel(
             return
         }
 
-        if (omronDeviceType.is9200T) {
+        if (omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T) {
             omronManager.connectBpDevice(deviceAddress)
             return
         }
@@ -113,11 +113,11 @@ class DeviceRegisterViewModel(
                 PrefUtils.saveBodyCompositionMonitorHbf222tUserIndex(userIndex)
                 return
             }
-            omronDeviceType.is9200T -> {
+            omronDeviceType.isHEM9200T -> {
                 PrefUtils.saveBpMonitorHem9200tDeviceAddress(deviceAddress)
                 return
             }
-            omronDeviceType.is7155T -> {
+            omronDeviceType.isHEM7155T -> {
                 PrefUtils.saveBpMonitorHem7155tAddress(deviceAddress)
                 return
             }
