@@ -41,7 +41,7 @@ class DeviceRegisterViewModel(
         omronManager.stopScan()
     }
 
-    override fun onScanned(discoveredDevices: MutableList<DiscoveredDevice>?) {
+    override fun onScanned(discoveredDevices: List<DiscoveredDevice>?) {
         if (discoveredDevices == null) return
 
         _connectionEvent.postValue(

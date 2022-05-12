@@ -32,7 +32,7 @@ public enum OmronDeviceType {
 
     public OHQDeviceCategory getOmronDeviceCategory() {
         if (isHBF222F()) {
-            return OHQDeviceCategory.BodyCompositionMonitor;
+            return OHQDeviceCategory.WeightScale;
         }
 
         if (is9200T() || is7155T()) {

@@ -19,7 +19,6 @@ import net.huray.omronsdk.ble.enumerate.OHQUserDataKey;
 import net.huray.omronsdk.ble.system.LoggingManager;
 import net.huray.omronsdk.utility.Handler;
 
-
 import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
@@ -147,7 +146,7 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     }
 
     private Map<OHQSessionOptionKey, Object> getOptionKeys() {
-        if (deviceCategory == OHQDeviceCategory.BodyCompositionMonitor) {
+        if (deviceCategory == OHQDeviceCategory.WeightScale) {
             if (weightDeviceInfo == null) {
                 throw new NullPointerException("weightDeviceInfo is null");
             }
