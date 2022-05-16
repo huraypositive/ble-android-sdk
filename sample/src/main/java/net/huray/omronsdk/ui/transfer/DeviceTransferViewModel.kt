@@ -63,8 +63,8 @@ class DeviceTransferViewModel(
             omronDeviceType.isHEM9200T -> {
                 omronManager.requestBpData(PrefUtils.getBpMonitorHem9200tAddress())
             }
-            omronDeviceType.isHEM9200T -> {
-                omronManager.requestBpData(PrefUtils.getBpMonitorHem9200tAddress())
+            omronDeviceType.isHEM7155T -> {
+                omronManager.requestBpData(PrefUtils.getBpMonitorHem7155tAddress())
             }
             omronDeviceType.isHBF222F -> {
                 val info = PrefUtils.getBodyCompositionMonitorHbf222tTransferInfo()
