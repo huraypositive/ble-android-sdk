@@ -51,7 +51,7 @@ class App : Application {
 ## 2. 기기 등록 (Register)
 #### 2-1. OmronManager 객체 초기화
 ```kotlin
-// 파라미터로 넘겨주는 sessionType이  `REGISTER`임 유의한다.
+// 파라미터로 넘겨주는 sessionType이  `REGISTER`임에 유의한다.
 private val omronManager: OmronDeviceManager = OmronDeviceManager(
     omronDeviceType.omronDeviceCategory,
     OHQSessionType.REGISTER,
@@ -110,10 +110,10 @@ private fun connectBpDevice(deviceAddress: String) {
 }
 ```
 
-## 2. 측정 데이터 가져오기 (Transfer)
+## 3. 측정 데이터 가져오기 (Transfer)
 #### 3-1. OmronManager 객체 초기화
 ```kotlin
-// 파라미터로 넘겨주는 sessionType이  `TRANSFER`임에에을 유의한다.
+// 파라미터로 넘겨주는 sessionType이  `TRANSFER`임에 유의한다.
 private val omronManager: OmronDeviceManager = OmronDeviceManager(
     omronDeviceType.omronDeviceCategory,
     OHQSessionType.TRANSFER,
