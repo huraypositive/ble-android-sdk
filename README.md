@@ -1,5 +1,5 @@
 # Omron Android SDK
-오므론 블루투스 기기 SDK의 쉬운 사용을 위한 라이브러리
+오므론 블루투스 기기 SDK의 사용을 단순하게 하기 위한 라이브러리
 
 ## 적용 기기
 - 오므론 체성분계 [Omron HBF-222T]
@@ -27,7 +27,6 @@ dependencies {
 
 ## 사용 방법
 - OmronDeviceManager 클래스 (기기 스캔, 연결, 데이터 요청)
-- sample 코드가 Java로 작성되어있는 관계로 예시 코드 또한 Java로 설명한다.
 
 ## Manifest.xml 권한 추가
 ```xml
@@ -37,151 +36,135 @@ dependencies {
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 ```
 
-## 0. OHQDeviceManager 초기화
+## 1. OHQDeviceManager 초기화
 #### SDK를 사용하기 전 OHQDeviceManager 인스턴스를 초기화해줘야 한다. 
-```Java
-// in your App.java
-public class App extends Application {
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        OHQDeviceManager.init(getApplicationContext());
+```kotlin
+// in your App.kt
+class App : Application {
+    override fun onCreate() {
+        super.onCreate()
+        OHQDeviceManager.init(applicationContext)
     }
 }
 ```
 
-## 1. 기기 페어링 (Register)
-#### 사용할 클래스(`ViewModel` or `Activity` or `Fragment`)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
-```Java
-public classRegisterActivity extends AppCompatActivity implements OmronDeviceManager.RegisterListener {
-    @Override
-    void onScanned(List<DiscoveredDevice> discoveredDevices) {
+## 2. 기기 등록 (Register)
+#### 2-1. OmronManager 객체 초기화
+```kotlin
+// 파라미터로 넘겨주는 sessionType이  `REGISTER`임 유의한다.
+private val omronManager: OmronDeviceManager = OmronDeviceManager(
+    omronDeviceType.omronDeviceCategory,
+    OHQSessionType.REGISTER,
+    this
+)
+```
+
+#### 2-2. 사용할 클래스(예: `ViewModel`)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
+```kotlin
+class DeviceRegisterViewModel() : ViewModel(), OmronDeviceManager.RegisterListener {
+    override fun onScanned(discoveredDevices: List<DiscoveredDevice>?) {
         // 스캔된 기기 목록이 들어오는 콜백 메서드
     }
 
-    @Override
-    void onRegisterFailed(OHQCompletionReason reason) {
+    override fun onRegisterFailed(reason: OHQCompletionReason?) {
         // 기기 등록이 실패했을 때 호출되는 콜백 메서드
         // 연결 취소 혹은 연결 시간 초과(30초)
     }
 
-    @Override
-    void onRegisterSuccess() {
+    override fun onRegisterSuccess() {
         // 기기 등록이 성공했을 때 호출되는 콜백 메서드
     }
 }
 ```
 
-#### OmronManager 객체 초기화 예시 (Activity의 경우 onCreate()에서 초기화)
-```Java
-private OmronDeviceManager omronManager;
-
-private void initDeviceManager() {
-    omronManager = new OmronDeviceManager(
-        OHQDeviceCategory.BodyCompositionMonitor, // or OHQDeviceCategory.BloodPressureMonitor
-        OHQSessionType.REGISTER,
-        this);
-}
-```
-
-#### 기기 스캔 예시
-```Java
-private void startScanOmron() {
-    // 스캔 시작 버튼과 스캔 중지 버튼이 같은 경우
+#### 2-3. 기기 스캔
+```kotlin
+fun startScan() {
     if (omronManager.isScanning()) {
-        omronManager.stopScan();
-        return;
+        return
     }
-    omronManager.startScan();
-    showScanningView();
+    
+    omronManager.startScan()
 }
 ```
 
-#### 기기 연결 예시 (체성분계)
-```Java
-private void connectWeightDevice(int position) {
+#### 2-4a. 기기 연결 (체성분계 - HBF-222T)
+```kotlin
+private fun connectWeightDevice(deviceAddress: String, userIndex: Int) {
     if (userIndex == 0) {
         // 사용자 번호 선택해야 함
-        return;
+        return
     }
-
-    deviceAddress = adapter.getDeviceAddress(position);
-    WeightDeviceInfo deviceData = WeightDeviceInfo.newInstanceForRegister(deviceAddress, userIndex);
-    omronManager.connectWeightDevice(deviceData);
-    showLoadingView();
-    // 30초 동안 연결되지 않으면 연결 실패
+    
+    val deviceInfo = WeightDeviceInfo.newInstanceForRegister(userData, deviceAddress, userIndex)
+    omronManager.connectWeightDevice(deviceInfo)
+    // 30초 동안 연결되지 않으면 연결 실패 -> onRegisterFailed() 함수 호출됨
 }
 ```
 
-#### 기기 연결 예시 (혈압계)
-```Java
-private void connectBpDevice(int position) {
-    deviceAddress = adapter.getDeviceAddress(position);
-    omronManager.connectBpDevice(deviceAddress);
-    showLoadingView();
-    // 30초 동안 연결되지 않으면 연결 실패
+#### 2-4a. 기기 연결 (혈압계 - HEM-9200T)
+```kotlin
+private fun connectBpDevice(deviceAddress: String) {
+    omronManager.connectBpDevice(deviceAddress)
+    // 30초 동안 연결되지 않으면 연결 실패 -> onRegisterFailed() 함수 호출됨
 }
 ```
 
 ## 2. 측정 데이터 가져오기 (Transfer)
-#### 사용할 클래스(Activity 혹은 Fragment)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
-```Java
-public classRegisterActivity extends AppCompatActivity implements OmronDeviceManager.TransferListener {
-    // 기기에서 측정 완료 후 아래 데이터 요처 메서드 호출
-    private void requestData() {
-        if (omronDeviceType.isBpDevice) {
-            omronManager.requestBpData(deviceAddress);
+#### 3-1. OmronManager 객체 초기화
+```kotlin
+// 파라미터로 넘겨주는 sessionType이  `TRANSFER`임에에을 유의한다.
+private val omronManager: OmronDeviceManager = OmronDeviceManager(
+    omronDeviceType.omronDeviceCategory,
+    OHQSessionType.TRANSFER,
+    this
+)
+```
+
+#### 3-2. 사용할 클래스(예: `ViewModel`)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
+```kotlin
+class DeviceTransferViewModel : ViewModel(), OmronDeviceManager.TransferListener {
+    override fun onTransferFailed(reason: OHQCompletionReason?) {
+        // 데이터 요청 실패 시 호출되는 콜백 메서드
+        // 요청 취소 혹은 요청 시간 초과(30초)
+    }
+
+    override fun onTransferSuccess(sessionData: SessionData?) {
+        // 데이터 요청 성공 시 호출되는 콜백 메서드
+        
+        val results = sessionData?.measurementRecords
+
+        if (results.isNullOrEmpty) {
+            // 요청은 성공했지만 새로 측정된 데이터가 없음
+            return
+        }
+
+        if (omronDeviceType.isHBF222F) {
+            updateBodyCompositionData(results)
+            saveSequenceNumber(sessionData.getSequenceNumberOfLatestRecord())
+
+            if (omronManager.isUserInfoChanged(sessionData)) {
+                updateIncrementDataKey()
+            }
+
+            return
+        }
+
+        if (omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T) {
+            updateBloodPressureData(results)
+            return
+        }
+    }
+
+    // 먼저 기기에서 측정 완료된 후 아래와 같이 데이터 요청
+    fun requestData() {
+        if (omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T) {
+            omronManager.requestBpData(deviceAddress)
         }
 
         if (omronDeviceType.isWeightDevice) {
             omronManager.requestWeightData(deviceInfo)
         }
     }
-
-    @Override
-    void onTransferFailed(OHQCompletionReason reason) {
-        // 데이터 요청 실패 시 호출되는 콜백 메서드
-        // 요청 취소 혹은 요청 시간 초과(15초)
-    }
-
-    @Override
-    void onTransferSuccess(SessionData sessionData) {
-        // 데이터 요청 성공 시 호출되는 콜백 메서드
-        List<Map<OHQMeasurementRecordKey, Object>> results = sessionData.getMeasurementRecords();
-
-        if (results.isEmpty()) {
-            // 요청은 성공했지만 새로 측정된 데이터가 없음
-            return;
-        }
-
-        if (omronDeviceType.isBpDevice()) {
-             updateBpData(results);
-            return;
-        }
-
-        if (omronDeviceType.isWeightDevice()) {
-            updateWeightData(results);
-            saveSequenceNumber(sessionData.getSequenceNumberOfLatestRecord());
-
-            if (omronManager.isUserInfoChanged(sessionData, OmronOption.getDemoUser())) {
-                updateIncrementDataKey();
-            }
-
-            return;
-        }
-    }
 }
 ```
-
-#### OmronManager 객체 초기화 예시 (Activity의 경우 onCreate()에서 초기화)
-```Java
-private OmronDeviceManager omronManager;
-
-private void initDeviceManager() {
-    omronManager = new OmronDeviceManager(
-        OHQDeviceCategory.BodyCompositionMonitor, // or OHQDeviceCategory.BloodPressureMonitor
-        OHQSessionType.TRANSFER,
-        this);
-}
-```
-
