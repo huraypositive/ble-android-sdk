@@ -247,11 +247,10 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     private void setSessionFailed(OHQCompletionReason reason) {
         if (sessionType == OHQSessionType.REGISTER) {
             registerListener.onRegisterFailed(reason);
+            return;
         }
 
-        if (sessionType == OHQSessionType.TRANSFER) {
-            transferListener.onTransferFailed(reason);
-        }
+        transferListener.onTransferFailed(reason);
     }
 
     private void validateScanListener() throws IllegalStateException {
