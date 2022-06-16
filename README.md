@@ -102,13 +102,15 @@ private fun connectWeightDevice(deviceAddress: String, userIndex: Int) {
 }
 ```
 
-#### 2-4a. 기기 연결 (혈압계 - HEM-9200T)
+#### 2-4a. 기기 연결 (혈압계 - HEM-9200T, HEM-7155T)
 ```kotlin
 private fun connectBpDevice(deviceAddress: String) {
     omronManager.connectBpDevice(deviceAddress)
     // 30초 동안 연결되지 않으면 연결 실패 -> onRegisterFailed() 함수 호출됨
 }
 ```
+`NOTE`: HEM-7155T 모델의 경우 기기에서 userIndex를 선택할 수 있으나, 측정 기록을 가져올 때 userIndex를 기기로 전달해서 인덱스에 해당하는 기록만 가져오는 기능을 제공하지 않는다. 
+따라서 해당 기능을 구현하려면 userIndex 값을 SharedPreferences등을 사용해 로컬에 저장한 후 측정시 넘어온 데이터에서 userIndex를 필터링 하여 사용하는 수밖에 없다.
 
 ## 3. 측정 데이터 가져오기 (Transfer)
 #### 3-1. OmronManager 객체 초기화
