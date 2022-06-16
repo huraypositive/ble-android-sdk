@@ -1,7 +1,6 @@
 package net.huray.omronsdk.ble.controller;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -235,9 +234,6 @@ public class SessionController implements
     }
 
     private void _onDataReceived(@NonNull OHQDataType dataType, @NonNull Object data) {
-        Log.v("OMRON", String.format("omron weight data type: %s", dataType));
-        Log.v("OMRON", String.format("omron weight data: %s", data));
-
         switch (dataType) {
             case DeviceCategory:
                 OHQDeviceCategory deviceCategory = Types.autoCast(data);
@@ -260,11 +256,19 @@ public class SessionController implements
                 mSessionData.setBatteryLevel((Integer) data);
                 break;
             case RegisteredUserIndex:
-            case AuthenticatedUserIndex:
-            case DeletedUserIndex:
                 int registeredUserIndex = Types.autoCast(data);
                 AppLog.d(dataType.name() + " " + registeredUserIndex);
                 mSessionData.setUserIndex(registeredUserIndex);
+                break;
+            case AuthenticatedUserIndex:
+                int authenticatedUserIndex = Types.autoCast(data);
+                AppLog.d(dataType.name() + " " + authenticatedUserIndex);
+                mSessionData.setUserIndex(authenticatedUserIndex);
+                break;
+            case DeletedUserIndex:
+                int deletedUserIndex = Types.autoCast(data);
+                AppLog.d(dataType.name() + " " + deletedUserIndex);
+                mSessionData.setUserIndex(deletedUserIndex);
                 break;
             case UserData:
                 Map<OHQUserDataKey, Object> userData = Types.autoCast(data);

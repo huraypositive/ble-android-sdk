@@ -16,13 +16,14 @@ import net.huray.omronsdk.ble.enumerate.OHQGender;
 import net.huray.omronsdk.ble.enumerate.OHQSessionOptionKey;
 import net.huray.omronsdk.ble.enumerate.OHQSessionType;
 import net.huray.omronsdk.ble.enumerate.OHQUserDataKey;
+import net.huray.omronsdk.ble.enumerate.OmronDeviceType;
 import net.huray.omronsdk.ble.system.LoggingManager;
 import net.huray.omronsdk.utility.Handler;
-
 
 import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,7 +33,7 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     private final SessionController sessionController = new SessionController(this);
     private final LoggingManager loggingManager = new LoggingManager();
 
-    private final OHQDeviceCategory deviceCategory;
+    private final OmronDeviceType deviceType;
     private final OHQSessionType sessionType;
 
     private RegisterListener registerListener;
@@ -43,20 +44,21 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     private String deviceAddress;
 
     private boolean isScanning = false;
+    private boolean isScanAllCategory = false;
 
-    private OmronDeviceManager(OHQDeviceCategory deviceType, OHQSessionType sessionType) {
-        this.deviceCategory = deviceType;
+    private OmronDeviceManager(OmronDeviceType deviceType, OHQSessionType sessionType) {
+        this.deviceType = deviceType;
         this.sessionType = sessionType;
     }
 
-    public OmronDeviceManager(OHQDeviceCategory deviceType,
+    public OmronDeviceManager(OmronDeviceType deviceType,
                               OHQSessionType sessionType,
                               RegisterListener listener) {
         this(deviceType, sessionType);
         this.registerListener = listener;
     }
 
-    public OmronDeviceManager(OHQDeviceCategory deviceType,
+    public OmronDeviceManager(OmronDeviceType deviceType,
                               OHQSessionType sessionType,
                               TransferListener listener) {
         this(deviceType, sessionType);
@@ -67,8 +69,13 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
         return isScanning;
     }
 
+    public void startScan(Boolean scanAllCategory) {
+        isScanAllCategory = scanAllCategory;
+        startScan();
+    }
+
     public void startScan() {
-        scanController.setFilteringDeviceCategory(deviceCategory);
+        scanController.setFilteringDeviceCategory(deviceType.getOmronDeviceCategory());
 
         if (isScanning) return;
 
@@ -139,15 +146,15 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
 
             private void onStarted() {
                 handler.post(() -> {
-                        sessionController.setConfig(OmronOption.getConfig());
-                        sessionController.startSession(deviceAddress, getOptionKeys());
+                    sessionController.setConfig(OmronOption.getConfig());
+                    sessionController.startSession(deviceAddress, getOptionKeys());
                 });
             }
         });
     }
 
     private Map<OHQSessionOptionKey, Object> getOptionKeys() {
-        if (deviceCategory == OHQDeviceCategory.BodyCompositionMonitor) {
+        if (deviceType.getOmronDeviceCategory() == OHQDeviceCategory.WeightScale) {
             if (weightDeviceInfo == null) {
                 throw new NullPointerException("weightDeviceInfo is null");
             }
@@ -188,8 +195,22 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
 
     @Override
     public void onScan(@NonNull @NotNull List<DiscoveredDevice> discoveredDevices) {
-        throwExceptionForScanListener();
-        registerListener.onScanned(discoveredDevices);
+        validateScanListener();
+
+        if (isScanAllCategory) {
+            registerListener.onScanned(discoveredDevices);
+            return;
+        }
+
+        List<DiscoveredDevice> filteredList = new ArrayList<>();
+        for (DiscoveredDevice device : discoveredDevices) {
+            if (device.getLocalName() == null) continue;
+            if (device.getLocalName().startsWith(deviceType.getTypeId())) {
+                filteredList.add(device);
+            }
+        }
+
+        registerListener.onScanned(filteredList);
     }
 
     @Override
@@ -205,40 +226,40 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
         OHQCompletionReason reason = sessionData.getCompletionReason();
 
         assert reason != null;
-        if (reason.isCanceled() || reason.isFailedToConnect()
-                || reason.isFailedToRegisterUser() || reason.isTimeOut()) {
+        if (reason.isCanceled() ||
+                reason.isFailedToConnect() ||
+                reason.isFailedToRegisterUser() ||
+                reason.isTimeOut()) {
             setSessionFailed(sessionData.getCompletionReason());
             return;
         }
 
         if (sessionType == OHQSessionType.REGISTER) {
-            throwExceptionForScanListener();
+            validateScanListener();
             registerListener.onRegisterSuccess();
             return;
         }
 
-        throwExceptionForTransferListener();
+        validateTransferListener();
         transferListener.onTransferSuccess(sessionData);
-
     }
 
     private void setSessionFailed(OHQCompletionReason reason) {
-        if (registerListener != null) {
+        if (sessionType == OHQSessionType.REGISTER) {
             registerListener.onRegisterFailed(reason);
+            return;
         }
 
-        if (transferListener != null) {
-            transferListener.onTransferFailed(reason);
-        }
+        transferListener.onTransferFailed(reason);
     }
 
-    private void throwExceptionForScanListener() throws IllegalStateException {
+    private void validateScanListener() throws IllegalStateException {
         if (registerListener == null) {
             throw new IllegalStateException("RegisterListener is not initialized");
         }
     }
 
-    private void throwExceptionForTransferListener() throws IllegalStateException {
+    private void validateTransferListener() throws IllegalStateException {
         if (transferListener == null) {
             throw new IllegalStateException("TransferListener is not initialized");
         }

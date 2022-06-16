@@ -115,7 +115,24 @@ public enum OHQMeasurementRecordKey {
     /**
      * Visceral Fat Level Stage Evaluation (Type of value : BigDecimal)
      */
-    VisceralFatLevelStageEvaluationKey("Visceral Fat Level Stage Evaluation"),;
+    VisceralFatLevelStageEvaluationKey("Visceral Fat Level Stage Evaluation"),
+    /**
+     * Saturation Of Percutaneous Oxygen (Type of value : BigDecimal)
+     */
+    PulseOximeterSpo2Key("Saturation Of Percutaneous Oxygen"),
+    /**
+     * Temperature (Type of value : BigDecimal)
+     */
+    BodyTemperatureKey("Body Temperature"),
+    /**
+     * Temperature Unit (Type of value : String, Value is ["℃" or "℉"])
+     */
+    BodyTemperatureUnitKey("Body Temperature Unit"),
+    /**
+     * Temperature Measurement Site (Type of value : String, Value is ["Oral" or "Underarm"])
+     */
+    BodyTemperatureTypeKey("Body Temperature Type"),
+    ;
     @NonNull
     private String mDescription;
 

@@ -1,120 +1,136 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ui.request_data.OmronTransferActivity">
+<layout>
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tv_request_omron_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:gravity="center"
-        android:text="OMRON 혈압계"
-        android:textColor="@color/design_default_color_on_secondary"
-        android:textSize="30sp"
-        app:layout_constraintTop_toTopOf="parent" />
+    <data>
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tv_request_description"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:gravity="center"
-        android:text="기기에서 측정 후 아래 버튼을 누르세요"
-        android:textColor="@color/design_default_color_on_secondary"
-        android:textSize="18sp"
-        app:layout_constraintTop_toBottomOf="@+id/tv_request_omron_title" />
+        <variable
+            name="viewModel"
+            type="net.huray.omronsdk.ui.transfer.DeviceTransferViewModel" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraint_user_index"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/tv_request_description"
-        android:visibility="gone"
-        android:layout_margin="10dp">
+        <import type="android.view.View" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tv_index_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="User Index : "
-            android:textSize="16sp"
-            android:textColor="@color/design_default_color_on_secondary"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"/>
+    </data>
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tv_user_index"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="4"
-            android:textSize="16sp"
-            android:textColor="@color/design_default_color_on_secondary"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/tv_index_title"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <Button
-        android:id="@+id/btn_request_omron_data"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:text="@string/request_data"
-        android:textSize="16sp"
-        app:layout_constraintTop_toBottomOf="@id/constraint_user_index" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tv_disconnect_omron_device"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="20dp"
-        app:layout_constraintTop_toBottomOf="@id/btn_request_omron_data"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:text="디바이스 연결 해제"
-        android:layout_marginTop="15dp"
-        android:textSize="14sp"
-        android:textColor="@color/design_default_color_error"/>
-
-    <ListView
-        android:id="@+id/lv_requested_data_list"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_disconnect_omron_device"
-        android:layout_marginTop="20dp"
-        tools:listitem="@layout/item_omron_weight_data" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/progress_container"
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorProgress"
-        android:visibility="gone">
+        tools:context=".ui.transfer.DeviceTransferActivity">
 
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_request_omron_title"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            tools:text="OMRON 혈압계"
+            android:textColor="@color/design_default_color_on_secondary"
+            android:textSize="30sp"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_request_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="기기에서 측정 후 아래 버튼을 누르세요"
+            android:textColor="@color/design_default_color_on_secondary"
+            android:textSize="18sp"
+            app:layout_constraintTop_toBottomOf="@+id/tv_request_omron_title" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraint_user_index"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/tv_request_description">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_index_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="User Index : "
+                android:textColor="@color/design_default_color_on_secondary"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_user_index"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4"
+                android:textColor="@color/design_default_color_on_secondary"
+                android:textSize="16sp"
+                app:layout_constraintStart_toEndOf="@+id/tv_index_title"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
         <Button
-            android:id="@+id/btn_stop_connection"
+            android:id="@+id/btn_request_omron_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text="@string/request_data"
+            android:textSize="16sp"
+            android:onClick="@{() -> viewModel.requestData()}"
+            app:layout_constraintTop_toBottomOf="@id/constraint_user_index" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_disconnect_omron_device"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="취소"
-            app:layout_constraintTop_toBottomOf="@+id/progress_bar"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="20dp"
+            android:text="디바이스 연결 해제"
+            android:textColor="@color/design_default_color_error"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="10dp"/>
+            app:layout_constraintTop_toBottomOf="@id/btn_request_omron_data" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_requested_data_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="20dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_disconnect_omron_device"
+            tools:listitem="@layout/item_omron_weight_data" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/progress_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/colorProgress"
+            android:visibility="@{viewModel.loadingEvent ? View.VISIBLE : View.GONE}"
+            tools:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/btn_stop_connection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:onClick="@{() -> viewModel.cancel()}"
+                android:text="취소"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/progress_bar" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

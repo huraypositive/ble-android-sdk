@@ -1,6 +1,5 @@
 package net.huray.omronsdk.ble.enumerate;
 
-
 import androidx.annotation.NonNull;
 
 import net.huray.omronsdk.androidcorebluetooth.CBManagerState;

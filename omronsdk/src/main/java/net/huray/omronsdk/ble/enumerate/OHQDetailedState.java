@@ -21,6 +21,7 @@ public enum OHQDetailedState {
     WriteUserDataPreparing,
     UserDataWriting,
     MeasurementRecordAccessControlling,
+    PlxMeasurementRecordAccessControlling,
     Idle,
     Disconnecting,
     Disconnected,

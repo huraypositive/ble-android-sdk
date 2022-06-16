@@ -5,7 +5,8 @@
     <string name="click_device_scan_button">디바이스 스캔 버튼을 누르세요</string>
     <string name="scanning_device">스캔 중입니다…</string>
     <string name="omron_body_composition_monitor">오므론 체성분계 Omron HBF-222T</string>
-    <string name="omron_blood_pressure_monitor">오므론 혈압계 Omron HEM-9200T</string>
+    <string name="omron_blood_pressure_monitor_9200t">오므론 혈압계 Omron HEM-9200T</string>
+    <string name="omron_blood_pressure_monitor_7155T">오므론 혈압계 Omron HEM-7155T</string>
     <string name="select_user_index">사용자 번호를 선택해주세요.</string>
     <string name="request_data">데이터 가져오기</string>
     <string name="connection_canceled">연결을 취소했습니다.</string>

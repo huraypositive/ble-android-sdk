@@ -26,7 +26,10 @@ import net.huray.omronsdk.ble.entity.internal.BodyCompositionFeature;
 import net.huray.omronsdk.ble.entity.internal.BodyCompositionMeasurement;
 import net.huray.omronsdk.ble.entity.internal.CharacteristicPresentationFormat;
 import net.huray.omronsdk.ble.entity.internal.OmronMeasurementWS;
+import net.huray.omronsdk.ble.entity.internal.PulseOximeterFeatures;
+import net.huray.omronsdk.ble.entity.internal.PulseOximeterSpotCheckMeasurement;
 import net.huray.omronsdk.ble.entity.internal.RecordAccessControlPoint;
+import net.huray.omronsdk.ble.entity.internal.TemperatureMeasurement;
 import net.huray.omronsdk.ble.entity.internal.UserControlPoint;
 import net.huray.omronsdk.ble.entity.internal.WeightMeasurement;
 import net.huray.omronsdk.ble.entity.internal.WeightScaleFeature;
@@ -88,6 +91,7 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
     private final State mUserDataReadingState = new UserDataReadingState();
     private final State mUserDataWritingState = new UserDataWritingState();
     private final State mMeasurementRecordAccessControllingState = new MeasurementRecordAccessControllingState();
+    private final State mPlxMeasurementRecordAccessControllingState = new PlxMeasurementRecordAccessControllingState();
     private final State mIdleState = new IdleState();
 
     @NonNull
@@ -117,6 +121,12 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
     private byte[] mMultiplePacketMeasurementData;
     @Nullable
     private Map<OHQMeasurementRecordKey, Object> mPartialMeasurementRecord;
+    private PulseOximeterFeatures mPulseOximeterFeatures;
+    private Integer mPlxpReortedNumberOfMeasurement;
+    private Integer mPlxpNumberOfRecords;
+    private boolean mPlxpIsCheckNumberOfRecords;
+    private boolean mPlxpWaitingSpotCheckMeasurement;
+    private final Integer mPlxSpotcheckRecordCount = 1;
 
     OHQDevice(
             @Nullable Looper looper,
@@ -138,6 +148,10 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
             mDeviceCategory = OHQDeviceCategory.BloodPressureMonitor;
         } else if (null != _getService(OHQUUIDDefines.Service.WeightScale.uuid())) {
             mDeviceCategory = OHQDeviceCategory.WeightScale;
+        } else if (null != _getService(OHQUUIDDefines.Service.OmronCustomPLXService.uuid())) {
+            mDeviceCategory = OHQDeviceCategory.PulseOximeter;
+        } else if (null != _getService(OHQUUIDDefines.Service.HealthThermometer.uuid())) {
+            mDeviceCategory = OHQDeviceCategory.HealthThermometer;
         } else {
             mDeviceCategory = OHQDeviceCategory.Unknown;
         }
@@ -167,6 +181,7 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
         addState(mUserDataReadingState, notificationEnabledState);
         addState(mUserDataWritingState, notificationEnabledState);
         addState(mMeasurementRecordAccessControllingState, notificationEnabledState);
+        addState(mPlxMeasurementRecordAccessControllingState, notificationEnabledState);
         addState(mIdleState, notificationEnabledState);
 
         setInitialState(mInactiveState);
@@ -336,23 +351,27 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
         @Override
         public boolean processMessage(@NonNull Message msg) {
             OHQLog.e("Illegal event. msg.what:" + String.format(Locale.US, "0x%08x", msg.what));
-            return HANDLED;
+            return StateMachine.HANDLED;
         }
     }
 
     private class InactiveState extends State {
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_START_TRANSFER:
-                    handle = HANDLED;
+                    handle = StateMachine.HANDLED;
                     mNotificationEnabledCharacteristicUUIDs.clear();
                     mLatestUserData.clear();
                     mMeasurementRecords.clear();
                     mHeightCharacteristicPresentationFormat = null;
                     mAuthenticateUserIndex = null;
                     mLatestDatabaseChangeIncrement = null;
+                    mPlxpNumberOfRecords = 0;
+                    mPlxpIsCheckNumberOfRecords = false;
+                    mPlxpWaitingSpotCheckMeasurement = false;
+                    mPlxpReortedNumberOfMeasurement = 0;
                     transitionTo(mDescValueReadingState);
                     break;
                 default:
@@ -365,10 +384,11 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
     private class ActiveState extends State {
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
+            OHQLog.e("EVENT:" + msg.what);
             switch (msg.what) {
                 case EVT_CANCEL_TRANSFER:
-                    handle = HANDLED;
+                    handle = StateMachine.HANDLED;
                     transitionTo(mInactiveState);
                     break;
                 case EVT_UPDATE_CHAR_FAILURE:
@@ -376,7 +396,7 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
                 case EVT_WRITE_CHAR_FAILURE:
                 case EVT_WRITE_DESC_FAILURE:
                 case EVT_UPDATE_NOTIFY_FAILURE:
-                    handle = HANDLED;
+                    handle = StateMachine.HANDLED;
                     OHQLog.e("Failed to transfer. gatt status:" + msg.arg1);
                     _abort(OHQCompletionReason.FailedToTransfer);
                     break;
@@ -413,12 +433,12 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_UPDATE_DESC_SUCCESS: {
                     CBDescriptor descriptor = (CBDescriptor) msg.obj;
                     if (descriptors.contains(descriptor)) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         if (OHQUUIDDefines.Descriptor.CharacteristicPresentationFormat.uuid().equals(descriptor.uuid())) {
                             _didUpdateValueForCharacteristicPresentationFormatDescriptor(descriptor);
                         }
@@ -455,9 +475,14 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
             mDelegate.onStateChanged(OHQDetailedState.CharValueReading);
             characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.DeviceInformation.uuid(), OHQUUIDDefines.Characteristic.ModelNumberString.uuid()));
             characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.BatteryService.uuid(), OHQUUIDDefines.Characteristic.BatteryLevel.uuid()));
-            characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.BloodPressure.uuid(), OHQUUIDDefines.Characteristic.BloodPressureFeature.uuid()));
-            characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.BodyComposition.uuid(), OHQUUIDDefines.Characteristic.BodyCompositionFeature.uuid()));
-            characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.WeightScale.uuid(), OHQUUIDDefines.Characteristic.WeightScaleFeature.uuid()));
+            if (OHQDeviceCategory.PulseOximeter == mDeviceCategory) {
+                characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.OmronCustomPLXService.uuid(), OHQUUIDDefines.Characteristic.OmronCustomPLXFeatures.uuid()));
+            } else {
+                characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.BloodPressure.uuid(), OHQUUIDDefines.Characteristic.BloodPressureFeature.uuid()));
+                characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.BodyComposition.uuid(), OHQUUIDDefines.Characteristic.BodyCompositionFeature.uuid()));
+                characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.WeightScale.uuid(), OHQUUIDDefines.Characteristic.WeightScaleFeature.uuid()));
+            }
+
             if (characteristics.isEmpty()) {
                 transitionTo(mNotificationEnablingState);
             } else {
@@ -469,12 +494,12 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_UPDATE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) ((Object[])msg.obj)[0];
                     if (characteristics.contains(characteristic)) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         if (OHQUUIDDefines.Characteristic.ModelNumberString.uuid().equals(characteristic.uuid())) {
                             _didUpdateValueForModelNumberStringCharacteristic(characteristic);
                         } else if (OHQUUIDDefines.Characteristic.BatteryLevel.uuid().equals(characteristic.uuid())) {
@@ -485,6 +510,8 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
                             _didUpdateValueForWeightScaleFeatureCharacteristic(characteristic);
                         } else if (OHQUUIDDefines.Characteristic.BodyCompositionFeature.uuid().equals(characteristic.uuid())) {
                             _didUpdateValueForBodyCompositionFeatureCharacteristic(characteristic);
+                        } else if (OHQUUIDDefines.Characteristic.OmronCustomPLXFeatures.uuid().equals(characteristic.uuid())) {
+                            _didUpdateValueForOmronCustomPLXFeaturesCharacteristic(characteristic);
                         }
                         characteristics.remove(characteristic);
                         if (characteristics.isEmpty()) {
@@ -525,6 +552,11 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
             BodyCompositionFeature data = new BodyCompositionFeature(characteristic.value());
             OHQLog.i(data.toString());
         }
+
+        private void _didUpdateValueForOmronCustomPLXFeaturesCharacteristic(@NonNull CBCharacteristic characteristic) {
+            mPulseOximeterFeatures = new PulseOximeterFeatures(characteristic.value());
+            OHQLog.i(mPulseOximeterFeatures.toString());
+        }
     }
 
     private class NotificationEnablingState extends State {
@@ -538,17 +570,25 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public void enter(@Nullable Object[] transferObjects) {
+            mMeasurementRecords.clear();
+            mWroteCurrentTime = false;
+
             mDelegate.onStateChanged(OHQDetailedState.NotificationEnabling);
             characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.CurrentTimeService.uuid(), OHQUUIDDefines.Characteristic.CurrentTime.uuid()));
             characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.BatteryService.uuid(), OHQUUIDDefines.Characteristic.BatteryLevel.uuid()));
             if (mOptions.containsKey(RegisterNewUserKey) || mOptions.containsKey(OHQSessionOptionKey.UserIndexKey)) {
                 characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.UserData.uuid(), OHQUUIDDefines.Characteristic.UserControlPoint.uuid()));
+            }
+
+            if (ohq_isUnregisterMode() == false) {
                 characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.UserData.uuid(), OHQUUIDDefines.Characteristic.DatabaseChangeIncrement.uuid()));
             }
             CBCharacteristic omronBodyCompositionMeasurementCharacteristic = _getCharacteristic(OHQUUIDDefines.Service.OmronOptionalService.uuid(), OHQUUIDDefines.Characteristic.OmronMeasurementWS.uuid());
             if (mOptions.containsKey(ReadMeasurementRecordsKey)) {
                 if (mOptions.containsKey(AllowControlOfReadingPositionToMeasurementRecordsKey)) {
-                    characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.OmronOptionalService.uuid(), OHQUUIDDefines.Characteristic.RecordAccessControlPoint.uuid()));
+                    if (ohq_isUnregisterMode() == false) {
+                        characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.OmronOptionalService.uuid(), OHQUUIDDefines.Characteristic.RecordAccessControlPoint.uuid()));
+                    }
                 }
                 if (mOptions.containsKey(OHQSessionOptionKey.AllowAccessToOmronExtendedMeasurementRecordsKey) &&
                         ((null != omronBodyCompositionMeasurementCharacteristic))) {
@@ -557,6 +597,25 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
                     characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.BloodPressure.uuid(), OHQUUIDDefines.Characteristic.BloodPressureMeasurement.uuid()));
                     characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.BodyComposition.uuid(), OHQUUIDDefines.Characteristic.BodyCompositionMeasurement.uuid()));
                     characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.WeightScale.uuid(), OHQUUIDDefines.Characteristic.WeightMeasurement.uuid()));
+                    characteristics.add(_getCharacteristic(OHQUUIDDefines.Service.HealthThermometer.uuid(), OHQUUIDDefines.Characteristic.TemperatureMeasurement.uuid()));
+                }
+            }
+            if (OHQDeviceCategory.PulseOximeter == mDeviceCategory) {
+                if (mPulseOximeterFeatures.isMeasurementStoragePresent()) {
+                    CBCharacteristic omronPLXRecordAccessControlPointCharacteristic = _getCharacteristic(OHQUUIDDefines.Service.OmronCustomPLXService.uuid(), OHQUUIDDefines.Characteristic.OmronCustomPLXRecordAccessControlPoint.uuid());
+                    if (null != omronPLXRecordAccessControlPointCharacteristic) {
+                        characteristics.add(omronPLXRecordAccessControlPointCharacteristic);
+                    } else {
+                        mPlxpIsCheckNumberOfRecords = true;
+                    }
+                } else {
+                    mPlxpIsCheckNumberOfRecords = true;
+                }
+                if (mPlxpIsCheckNumberOfRecords == false) {
+                    CBCharacteristic omronPLXSpotCheckMeasurementCharacteristic = _getCharacteristic(OHQUUIDDefines.Service.OmronCustomPLXService.uuid(), OHQUUIDDefines.Characteristic.OmronCustomPLXSpotCheckMeasurement.uuid());
+                    if (null != omronPLXSpotCheckMeasurementCharacteristic) {
+                        characteristics.add(omronPLXSpotCheckMeasurementCharacteristic);
+                    }
                 }
             }
             if (characteristics.isEmpty()) {
@@ -571,10 +630,10 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_UPDATE_NOTIFY_SUCCESS: {
-                    handle = HANDLED;
+                    handle = StateMachine.HANDLED;
                     CBCharacteristic characteristic = (CBCharacteristic) msg.obj;
                     mNotificationEnabledCharacteristicUUIDs.add(characteristic.uuid());
                     characteristics.remove(characteristic);
@@ -589,7 +648,18 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
                             }
                         }
                         if (null == transitionState) {
-                            if (mOptions.containsKey(ReadMeasurementRecordsKey) &&
+                            if (OHQDeviceCategory.PulseOximeter == mDeviceCategory) {
+                                if (mNotificationEnabledCharacteristicUUIDs.contains(OHQUUIDDefines.Characteristic.CurrentTime.uuid())) {
+                                    _writeOfCurrentTimeCharacteristicsForPeripheral(_getCharacteristic(OHQUUIDDefines.Service.CurrentTimeService.uuid(), OHQUUIDDefines.Characteristic.CurrentTime.uuid()));
+                                    mWroteCurrentTime = true;
+                                }
+                                if (mPlxpIsCheckNumberOfRecords == false) {
+                                    // transitionState = mPlxMeasurementRecordAccessControllingState;
+                                } else {
+                                    // Finished because no data acquisition is required
+                                    transitionTo(mIdleState);
+                                }
+                            } else if (mOptions.containsKey(ReadMeasurementRecordsKey) &&
                                     mNotificationEnabledCharacteristicUUIDs.contains(OHQUUIDDefines.Characteristic.RecordAccessControlPoint.uuid())) {
                                 transitionState = mMeasurementRecordAccessControllingState;
                             } else {
@@ -600,10 +670,115 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
                     }
                     break;
                 }
+                case EVT_UPDATE_CHAR_SUCCESS: {
+                    Object[] objects = (Object[]) msg.obj;
+                    CBCharacteristic characteristic = (CBCharacteristic) objects[0];
+                    byte[] value = (byte[]) objects[1];
+                    if (OHQUUIDDefines.Characteristic.OmronCustomPLXSpotCheckMeasurement.uuid().equals(characteristic.uuid())) {
+                        // Processing when omronPLXSpotCheckMeasurementCharacteristic (measurement data) is received before the state transition.
+                        handle = StateMachine.HANDLED;
+                        _didUpdateValueForOmronCustomPLXSpotCheckMeasurementCharacteristic(characteristic);
+                        transitionTo(mPlxMeasurementRecordAccessControllingState);
+                    }
+                    else if (OHQUUIDDefines.Characteristic.CurrentTime.uuid().equals(characteristic.uuid())) {
+                        handle = StateMachine.HANDLED;
+                        _didUpdateValueForCurrentTimeCharacteristic(characteristic);
+                    }
+                    break;
+                }
                 default:
                     break;
             }
             return handle;
+        }
+
+        private void _didUpdateValueForCurrentTimeCharacteristic(@NonNull CBCharacteristic characteristic) {
+            byte[] data = characteristic.value();
+            String date = Bytes.parse7BytesAsDateString(data, 0, true);
+            int weekOfDay = data[7];
+            int fractions = data[8];
+            int adjustReason = data[9];
+
+            OHQLog.i(format(Locale.US, "%s WeekOfDay:%d Fractions256:%d AdjustReason:0x%02x",
+                    date, weekOfDay, fractions, adjustReason));
+
+            mDelegate.dataObserver(OHQDataType.CurrentTime, date);
+
+            if (!mWroteCurrentTime) {
+                _writeOfCurrentTimeCharacteristicsForPeripheral(characteristic);
+                mWroteCurrentTime = true;
+            }
+        }
+
+        private void _writeOfCurrentTimeCharacteristicsForPeripheral(@NonNull CBCharacteristic characteristic) {
+            byte[] data = new byte[10];
+            Calendar cal = Calendar.getInstance();
+            int year = cal.get(Calendar.YEAR);
+            data[0] = (byte) year;
+            data[1] = (byte) ((year >> 8) & 0xFF);
+            data[2] = (byte) (cal.get(Calendar.MONTH) + 1);
+            data[3] = (byte) cal.get(Calendar.DAY_OF_MONTH);
+            data[4] = (byte) cal.get(Calendar.HOUR_OF_DAY);
+            data[5] = (byte) cal.get(Calendar.MINUTE);
+            data[6] = (byte) cal.get(Calendar.SECOND);
+            data[7] = (byte) ((cal.get(Calendar.DAY_OF_WEEK) + 5) % 7 + 1); // Rotate
+            data[8] = (byte) (cal.get(Calendar.MILLISECOND) * 256 / 1000); // Fractions256
+            data[9] = 0x01; // Adjust Reason: Manual time update
+            String date = format(Locale.US, "%04d-%02d-%02d %02d:%02d:%02d WeekOfDay:%d Fractions256:%d AdjustReason:0x%02x",
+                    year, data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9]);
+            StringBuilder sb = new StringBuilder("");
+            for (byte b : data) {
+                sb.append(format(Locale.US, "%02x ", b));
+            }
+            OHQLog.i("CTS Tx Time:" + date);
+            OHQLog.i("CTS Tx Data:" + sb.toString());
+
+            mDelegate.dataObserver(OHQDataType.CurrentTime, Bytes.parse7BytesAsDateString(data, 0, true));
+
+            mPeripheral.writeValue(data, characteristic, CBCharacteristicWriteType.WithResponse);
+        }
+
+        private void _didUpdateValueForOmronCustomPLXSpotCheckMeasurementCharacteristic(@NonNull CBCharacteristic characteristic) {
+            OHQLog.vMethodIn();
+            PulseOximeterSpotCheckMeasurement data = new PulseOximeterSpotCheckMeasurement(characteristic.value());
+            OHQLog.i(data.toString());
+
+            Map<OHQMeasurementRecordKey, Object> measurementRecord = new HashMap<OHQMeasurementRecordKey, Object>() {
+                @Override
+                public Object put(OHQMeasurementRecordKey key, Object value) {
+                    return null != value ? super.put(key, value) : null;
+                }
+            };
+
+            if ((mPulseOximeterFeatures.isTimeStampPresent() == true) &&
+                    (data.isDeviceClockIsNotSet() == false)  &&
+                    (data.isTimeStampPresent() == true)
+            ) {
+                measurementRecord.put(OHQMeasurementRecordKey.TimeStampKey, data.getTimeStamp());
+            }
+            measurementRecord.put(OHQMeasurementRecordKey.PulseOximeterSpo2Key, data.getSpO2());
+            measurementRecord.put(OHQMeasurementRecordKey.PulseRateKey, data.getPulseRate());
+            mMeasurementRecords.add(measurementRecord);
+
+            mPlxpReortedNumberOfMeasurement++;
+        }
+
+        private boolean ohq_isUnregisterMode() {
+            if (OHQDeviceCategory.BodyCompositionMonitor == mDeviceCategory &&
+                    mOptions.containsKey(RegisterNewUserKey) &&
+                    mOptions.containsKey(OHQSessionOptionKey.UserIndexKey)) {
+                // Guest fixed user index
+                int guestUserIndex = 255;
+                String currentUserString = mOptions.get(OHQSessionOptionKey.UserIndexKey).toString();
+                int currentUserInt = Integer.valueOf(currentUserString);
+                if (guestUserIndex == currentUserInt) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
     }
 
@@ -611,8 +786,6 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public void enter(@Nullable Object[] transferObjects) {
-            mMeasurementRecords.clear();
-            mWroteCurrentTime = false;
             mMultiplePacketMeasurementData = null;
             mPartialMeasurementRecord = null;
             OHQLog.d(mNotificationEnabledCharacteristicUUIDs.toString());
@@ -620,37 +793,43 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_UPDATE_CHAR_SUCCESS: {
                     Object[] objects = (Object[]) msg.obj;
                     CBCharacteristic characteristic = (CBCharacteristic) objects[0];
                     byte[] value = (byte[]) objects[1];
                     if (OHQUUIDDefines.Characteristic.BatteryLevel.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForBatteryLevelCharacteristic(characteristic);
                     } else if (OHQUUIDDefines.Characteristic.CurrentTime.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForCurrentTimeCharacteristic(characteristic);
                     } else if (OHQUUIDDefines.Characteristic.BloodPressureMeasurement.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForBloodPressureMeasurementCharacteristic(characteristic);
                     } else if (OHQUUIDDefines.Characteristic.WeightMeasurement.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForWeightMeasurementCharacteristic(characteristic);
+                    } else if (OHQUUIDDefines.Characteristic.TemperatureMeasurement.uuid().equals(characteristic.uuid())) {
+                        handle = StateMachine.HANDLED;
+                        _didUpdateValueForTemperatureMeasurementCharacteristic(characteristic);
                     } else if (OHQUUIDDefines.Characteristic.BodyCompositionMeasurement.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForBodyCompositionMeasurementCharacteristic(value);
                     } else if (OHQUUIDDefines.Characteristic.OmronMeasurementWS.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForOmronMeasurementWSCharacteristic(value);
+                    } else if (OHQUUIDDefines.Characteristic.OmronCustomPLXSpotCheckMeasurement.uuid().equals(characteristic.uuid())) {
+                        handle = StateMachine.HANDLED;
+                        _didUpdateValueForOmronCustomPLXSpotCheckMeasurementCharacteristic(characteristic);
                     }
                     break;
                 }
                 case EVT_WRITE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) msg.obj;
                     if (OHQUUIDDefines.Characteristic.CurrentTime.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         OHQLog.d("CTS WriteCharacteristic Success.");
                     }
                     break;
@@ -658,7 +837,7 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
                 case EVT_WRITE_CHAR_FAILURE: {
                     CBCharacteristic characteristic = (CBCharacteristic) msg.obj;
                     if (OHQUUIDDefines.Characteristic.CurrentTime.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         int status = msg.arg1;
                         if (CBStatusCode.GATT_NO_RESOURCES == status) {   // 0x80: WriteCharacteristic Request Rejected
                             // If the slave sends error response in CTS,
@@ -755,6 +934,25 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
             } else {
                 mMeasurementRecords.add(measurementRecord);
             }
+        }
+
+        private void _didUpdateValueForTemperatureMeasurementCharacteristic(@NonNull CBCharacteristic characteristic) {
+            OHQLog.vMethodIn();
+            TemperatureMeasurement data = new TemperatureMeasurement(characteristic.value());
+            OHQLog.i(data.toString());
+
+            Map<OHQMeasurementRecordKey, Object> measurementRecord = new HashMap<OHQMeasurementRecordKey, Object>() {
+                @Override
+                public Object put(OHQMeasurementRecordKey key, Object value) {
+                    return null != value ? super.put(key, value) : null;
+                }
+            };
+            measurementRecord.put(OHQMeasurementRecordKey.BodyTemperatureKey, data.getTemperature());
+            measurementRecord.put(OHQMeasurementRecordKey.BodyTemperatureUnitKey, data.getTemperatureUnit());
+            measurementRecord.put(OHQMeasurementRecordKey.BodyTemperatureTypeKey, data.getTemperatureType());
+            measurementRecord.put(OHQMeasurementRecordKey.TimeStampKey, data.getTimeStamp());
+
+            mMeasurementRecords.add(measurementRecord);
         }
 
         private void _didUpdateValueForBodyCompositionMeasurementCharacteristic(@NonNull byte[] value) {
@@ -897,6 +1095,55 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
             mPeripheral.writeValue(data, characteristic, CBCharacteristicWriteType.WithResponse);
         }
+
+        private void _didUpdateValueForOmronCustomPLXSpotCheckMeasurementCharacteristic(@NonNull CBCharacteristic characteristic) {
+            OHQLog.vMethodIn();
+            PulseOximeterSpotCheckMeasurement data = new PulseOximeterSpotCheckMeasurement(characteristic.value());
+            OHQLog.i(data.toString());
+
+            if( (mPlxpIsCheckNumberOfRecords == true) &&
+                    (mPlxpReortedNumberOfMeasurement  == (mPlxpNumberOfRecords + mPlxSpotcheckRecordCount))
+            ){
+                // Protection processing when data is received after the reception of all data items is completed for the start of transfer.
+                //  note:Because measurement data may be notified before disconnection after memory data transfer by pairing.
+                return;
+            }
+
+            Map<OHQMeasurementRecordKey, Object> measurementRecord = new HashMap<OHQMeasurementRecordKey, Object>() {
+                @Override
+                public Object put(OHQMeasurementRecordKey key, Object value) {
+                    return null != value ? super.put(key, value) : null;
+                }
+            };
+
+            if ((mPulseOximeterFeatures.isTimeStampPresent() == true) &&
+                    (data.isDeviceClockIsNotSet() == false)  &&
+                    (data.isTimeStampPresent() == true)
+            ) {
+                measurementRecord.put(OHQMeasurementRecordKey.TimeStampKey, data.getTimeStamp());
+            }
+            measurementRecord.put(OHQMeasurementRecordKey.PulseOximeterSpo2Key, data.getSpO2());
+            measurementRecord.put(OHQMeasurementRecordKey.PulseRateKey, data.getPulseRate());
+            mMeasurementRecords.add(measurementRecord);
+
+            mPlxpReortedNumberOfMeasurement++;
+            OHQLog.d("mPlxpWaitingSpotCheckMeasurement:"+ mPlxpWaitingSpotCheckMeasurement + "/mPlxpReortedNumberOfMeasurement:" + mPlxpReortedNumberOfMeasurement + "/mPlxpNumberOfRecords:" + mPlxpNumberOfRecords);
+            if (mPlxpWaitingSpotCheckMeasurement == true) {
+                OHQLog.d("mPlxpReortedNumberOfMeasurement:" + mPlxpReortedNumberOfMeasurement + "/mPlxpNumberOfRecords:" + mPlxpNumberOfRecords);
+                if (mPlxpReortedNumberOfMeasurement  == (mPlxpNumberOfRecords + mPlxSpotcheckRecordCount)) {
+                    if (mPlxpNumberOfRecords != 0 ) {
+                        CBCharacteristic recordAccessControlPointCharacteristic = _getCharacteristic(
+                                OHQUUIDDefines.Service.OmronCustomPLXService.uuid(), OHQUUIDDefines.Characteristic.OmronCustomPLXRecordAccessControlPoint.uuid());
+                        final RecordAccessControlPoint.Request request;
+                        request = RecordAccessControlPoint.newDeleteStoredRecords();
+                        OHQLog.i(request.toString());
+                        mPeripheral.writeValue(request.getPacket(), recordAccessControlPointCharacteristic, CBCharacteristicWriteType.WithResponse);
+                    } else {
+                        transitionTo(mIdleState);
+                    }
+                }
+            }
+        }
     }
 
     private class UserRegisteringState extends State {
@@ -927,19 +1174,19 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_WRITE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) msg.obj;
                     if (OHQUUIDDefines.Characteristic.UserControlPoint.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                     }
                     break;
                 }
                 case EVT_UPDATE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) ((Object[])msg.obj)[0];
                     if (OHQUUIDDefines.Characteristic.UserControlPoint.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForUserControlPointCharacteristic(characteristic);
                     }
                     break;
@@ -1017,19 +1264,19 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_WRITE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) msg.obj;
                     if (OHQUUIDDefines.Characteristic.UserControlPoint.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                     }
                     break;
                 }
                 case EVT_UPDATE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) ((Object[])msg.obj)[0];
                     if (OHQUUIDDefines.Characteristic.UserControlPoint.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForUserControlPointCharacteristic(characteristic);
                     }
                     break;
@@ -1106,19 +1353,19 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_WRITE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) msg.obj;
                     if (OHQUUIDDefines.Characteristic.UserControlPoint.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                     }
                     break;
                 }
                 case EVT_UPDATE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) ((Object[])msg.obj)[0];
                     if (OHQUUIDDefines.Characteristic.UserControlPoint.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         UserControlPoint.Response response = UserControlPoint.parseResponse(characteristic.value());
                         OHQLog.d(response.toString());
                         if (UserControlPoint.OpCode.DeleteUserData != response.requestOpCode) {
@@ -1153,7 +1400,7 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
         @Override
         public void enter(@Nullable Object[] transferObjects) {
             mDelegate.onStateChanged(OHQDetailedState.WaitingForUpdateOfDatabaseChangeIncrement);
-            Long appDatabaseChangeIncrementValue = Types.autoCast(mOptions.get(DatabaseChangeIncrementValueKey));
+            Long appDatabaseChangeIncrementValue = Types.autoCast(mOptions.get(OHQSessionOptionKey.DatabaseChangeIncrementValueKey));
             if (null == appDatabaseChangeIncrementValue) {
                 _abort(OHQCompletionReason.OperationNotSupported);
                 return;
@@ -1164,12 +1411,12 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_UPDATE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) ((Object[])msg.obj)[0];
                     if (OHQUUIDDefines.Characteristic.DatabaseChangeIncrement.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForDatabaseChangeIncrementCharacteristic(characteristic);
                     }
                     break;
@@ -1259,12 +1506,12 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_UPDATE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) ((Object[])msg.obj)[0];
                     if (characteristics.contains(characteristic)) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         if (OHQUUIDDefines.Characteristic.DateofBirth.uuid().equals(characteristic.uuid())) {
                             _didUpdateValueForDateOfBirthCharacteristic(characteristic);
                         } else if (OHQUUIDDefines.Characteristic.Gender.uuid().equals(characteristic.uuid())) {
@@ -1394,12 +1641,12 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_WRITE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) msg.obj;
                     if (characteristics.containsKey(characteristic)) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         if (OHQUUIDDefines.Characteristic.DateofBirth.uuid().equals(characteristic.uuid())) {
                             updatedUserData.put(OHQUserDataKey.DateOfBirthKey, mLatestUserData.get(OHQUserDataKey.DateOfBirthKey));
                         } else if (OHQUUIDDefines.Characteristic.Gender.uuid().equals(characteristic.uuid())) {
@@ -1469,19 +1716,19 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
 
         @Override
         public boolean processMessage(@NonNull Message msg) {
-            boolean handle = NOT_HANDLED;
+            boolean handle = StateMachine.NOT_HANDLED;
             switch (msg.what) {
                 case EVT_WRITE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) msg.obj;
                     if (OHQUUIDDefines.Characteristic.RecordAccessControlPoint.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                     }
                     break;
                 }
                 case EVT_UPDATE_CHAR_SUCCESS: {
                     CBCharacteristic characteristic = (CBCharacteristic) ((Object[])msg.obj)[0];
                     if (OHQUUIDDefines.Characteristic.RecordAccessControlPoint.uuid().equals(characteristic.uuid())) {
-                        handle = HANDLED;
+                        handle = StateMachine.HANDLED;
                         _didUpdateValueForRecordAccessControlPointCharacteristic(characteristic);
                     }
                     break;
@@ -1532,6 +1779,94 @@ final class OHQDevice extends StateMachine implements CBPeripheralDelegate {
                     break;
             }
         }
+    }
+
+    private class PlxMeasurementRecordAccessControllingState extends State {
+
+        @Override
+        public void enter(@Nullable Object[] transferObjects) {
+            mDelegate.onStateChanged(OHQDetailedState.PlxMeasurementRecordAccessControlling);
+            if( mPulseOximeterFeatures.isMeasurementStoragePresent() ){
+                CBCharacteristic recordAccessControlPointCharacteristic = _getCharacteristic(
+                        OHQUUIDDefines.Service.OmronCustomPLXService.uuid(), OHQUUIDDefines.Characteristic.OmronCustomPLXRecordAccessControlPoint.uuid());
+                if (null == recordAccessControlPointCharacteristic) {
+                    OHQLog.d("null == recordAccessControlPointCharacteristic");
+                    return;
+                }
+                final RecordAccessControlPoint.Request request;
+                request = RecordAccessControlPoint.newReportNumberOfStoredRecordsOfAllRecords();
+                OHQLog.d(request.toString());
+                mPeripheral.writeValue(request.getPacket(), recordAccessControlPointCharacteristic, CBCharacteristicWriteType.WithResponse);
+            }
+        }
+
+        @Override
+        public boolean processMessage(@NonNull Message msg) {
+            boolean handle = StateMachine.NOT_HANDLED;
+            switch (msg.what) {
+                case EVT_WRITE_CHAR_SUCCESS: {
+                    CBCharacteristic characteristic = (CBCharacteristic) msg.obj;
+                    if (OHQUUIDDefines.Characteristic.OmronCustomPLXRecordAccessControlPoint.uuid().equals(characteristic.uuid())) {
+                        handle = StateMachine.HANDLED;
+                    }
+                    break;
+                }
+                case EVT_UPDATE_CHAR_SUCCESS: {
+                    CBCharacteristic characteristic = (CBCharacteristic) ((Object[])msg.obj)[0];
+                    if (OHQUUIDDefines.Characteristic.OmronCustomPLXRecordAccessControlPoint.uuid().equals(characteristic.uuid())) {
+                        handle = StateMachine.HANDLED;
+                        _didUpdateValueForOmronCustomPLXRecordAccessControlPointCharacteristic(characteristic);
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+            return handle;
+        }
+
+        private void _didUpdateValueForOmronCustomPLXRecordAccessControlPointCharacteristic(@NonNull CBCharacteristic characteristic) {
+            OHQLog.vMethodIn();
+
+            RecordAccessControlPoint.Response response = RecordAccessControlPoint.parseResponse(characteristic.value());
+            OHQLog.d(response.toString());
+            switch (response.opCode) {
+                case NumberOfStoredRecordsResponse: {
+                    mPlxpNumberOfRecords = response.numberOfRecords;
+                    mPlxpIsCheckNumberOfRecords = true;
+                    OHQLog.d("mPlxpNumberOfRecords:" + mPlxpNumberOfRecords);
+                    if (0 < response.numberOfRecords) {
+                        final RecordAccessControlPoint.Request request;
+                        request = RecordAccessControlPoint.newReportStoredRecordsOfAllRecords();
+                        mPeripheral.writeValue(request.getPacket(), characteristic, CBCharacteristicWriteType.WithResponse);
+                        OHQLog.d(request.toString());
+                    } else if(mPlxpReortedNumberOfMeasurement == mPlxSpotcheckRecordCount) {
+                        transitionTo(mIdleState);
+                    }
+                    break;
+                }
+                case ResponseCode: {
+                    if (response.requestOpCode == RecordAccessControlPoint.OpCode.ReportStoredRecords && response.responseValue == RecordAccessControlPoint.ResponseValue.Success) {
+                        OHQLog.d("mPlxpReortedNumberOfMeasurement:" + mPlxpReortedNumberOfMeasurement + "/mPlxpNumberOfRecords:" + mPlxpNumberOfRecords);
+                        if (mPlxpReortedNumberOfMeasurement  == (mPlxpNumberOfRecords + mPlxSpotcheckRecordCount)) {
+                            final RecordAccessControlPoint.Request request;
+                            request = RecordAccessControlPoint.newDeleteStoredRecords();
+                            mPeripheral.writeValue(request.getPacket(), characteristic, CBCharacteristicWriteType.WithResponse);
+                            OHQLog.d(request.toString());
+                        } else {
+                            // ToDo:Add Comments
+                            mPlxpWaitingSpotCheckMeasurement = true;
+                        }
+                    } else  if (response.requestOpCode == RecordAccessControlPoint.OpCode.DeleteStoredRecords && response.responseValue == RecordAccessControlPoint.ResponseValue.Success) {
+                        transitionTo(mIdleState);
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
     }
 
     private class IdleState extends State {

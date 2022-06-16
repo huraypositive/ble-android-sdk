@@ -5,4 +5,6 @@ public enum OHQDeviceCategory {
     BloodPressureMonitor,
     WeightScale,
     BodyCompositionMonitor,
+    PulseOximeter,
+    HealthThermometer
 }
