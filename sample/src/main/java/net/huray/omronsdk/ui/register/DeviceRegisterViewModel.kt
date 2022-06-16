@@ -24,7 +24,7 @@ class DeviceRegisterViewModel(
     val loadingEvent: LiveData<Boolean> get() = _loadingEvent
 
     private val omronManager: OmronDeviceManager = OmronDeviceManager(
-        omronDeviceType.omronDeviceCategory,
+        omronDeviceType,
         OHQSessionType.REGISTER,
         this
     )

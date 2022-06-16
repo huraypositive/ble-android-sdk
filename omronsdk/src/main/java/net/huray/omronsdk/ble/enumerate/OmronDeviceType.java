@@ -1,15 +1,17 @@
 package net.huray.omronsdk.ble.enumerate;
 
 public enum OmronDeviceType {
-    UNKNOWN_DEVICE(99),
-    BODY_COMPOSITION_MONITOR_HBF_222F(0),
-    BP_MONITOR_HEM_9200T(1),
-    BP_MONITOR_HEM_7155T(2);
+    UNKNOWN_DEVICE(99, ""),
+    BODY_COMPOSITION_MONITOR_HBF_222F(0, "BLEsmart_00010408"),
+    BP_MONITOR_HEM_9200T(1, "BLEsmart_00000116"),
+    BP_MONITOR_HEM_7155T(2, "BLEsmart_00000564");
 
     private final int number;
+    private final String typeId;
 
-    OmronDeviceType(int number) {
+    OmronDeviceType(int number, String typeId) {
         this.number = number;
+        this.typeId = typeId;
     }
 
     public static OmronDeviceType getDeviceType(int number) {
@@ -21,6 +23,10 @@ public enum OmronDeviceType {
 
     public int getNumber() {
         return number;
+    }
+
+    public String getTypeId() {
+        return typeId;
     }
 
     public String getName() {

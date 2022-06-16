@@ -160,6 +160,7 @@ class DeviceTransferViewModel : ViewModel(), OmronDeviceManager.TransferListener
     fun requestData() {
         if (omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T) {
             omronManager.requestBpData(deviceAddress)
+            return
         }
 
         if (omronDeviceType.isWeightDevice) {
