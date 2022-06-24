@@ -42,7 +42,7 @@ class DeviceTransferAdapter(
                     weightData = healthDataList[position] as OmronHealthData.WeightData
                 )
             }
-            omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T -> {
+            omronDeviceType.isBloodPressureMonitor -> {
                 setBpDatView(
                     holder = holder as BpDataViewHolder,
                     bpData = healthDataList[position] as OmronHealthData.BpData

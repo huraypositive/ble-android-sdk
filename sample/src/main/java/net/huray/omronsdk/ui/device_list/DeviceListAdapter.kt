@@ -81,5 +81,11 @@ class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
                 PrefUtils.getBpMonitorHem7155tAddress() != null
             )
         )
+        deviceStates.add(
+            DeviceStatus(
+                OmronDeviceType.BP_MONITOR_HEM_7142T,
+                PrefUtils.getBpMonitorHem7142tAddress() != null
+            )
+        )
     }
 }

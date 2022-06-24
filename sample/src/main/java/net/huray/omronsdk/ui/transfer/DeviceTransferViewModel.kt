@@ -48,7 +48,9 @@ class DeviceTransferViewModel(
 
         when {
             results.isNullOrEmpty() -> _noDataEvent.postValue(true)
-            omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T -> updateBloodPressureData(results)
+            omronDeviceType.isHEM9200T ||
+                    omronDeviceType.isHEM7155T ||
+                    omronDeviceType.isHEM7142T -> updateBloodPressureData(results)
             omronDeviceType.isHBF222F -> {
                 updateBodyCompositionData(results)
                 handleBodyCompositionSettingAfterTransfer(sessionData)
@@ -66,6 +68,9 @@ class DeviceTransferViewModel(
             omronDeviceType.isHEM7155T -> {
                 omronManager.requestBpData(PrefUtils.getBpMonitorHem7155tAddress())
             }
+            omronDeviceType.isHEM7142T -> {
+                omronManager.requestBpData(PrefUtils.getBpMonitorHem7142tAddress())
+            }
             omronDeviceType.isHBF222F -> {
                 val info = PrefUtils.getBodyCompositionMonitorHbf222tTransferInfo()
                 omronManager.requestWeightData(info)
@@ -82,6 +87,7 @@ class DeviceTransferViewModel(
             omronDeviceType.isHBF222F -> PrefUtils.removeOmronWeightDeice()
             omronDeviceType.isHEM9200T -> PrefUtils.saveBpMonitorHem9200tDeviceAddress(null)
             omronDeviceType.isHEM7155T -> PrefUtils.saveBpMonitorHem7155tAddress(null)
+            omronDeviceType.isHEM7142T -> PrefUtils.saveBpMonitorHem7142tAddress(null)
         }
     }
 

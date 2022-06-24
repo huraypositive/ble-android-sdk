@@ -11,6 +11,7 @@
 - 오므론 체성분계 [Omron HBF-222T]
 - 오므론 혈압계 [Omron HEM-9200T]
 - 오므론 혈압계 [Omron HEM-7155T]
+- 오므론 혈압계 [Omron HEM-7142T]
 
 ## 의존성 추가
 ```gradle
@@ -108,7 +109,7 @@ private fun connectWeightDevice(deviceAddress: String, userIndex: Int) {
 }
 ```
 
-#### 2-4a. 기기 연결 (혈압계 - HEM-9200T, HEM-7155T)
+#### 2-4a. 기기 연결 (혈압계 - HEM-9200T, HEM-7155T, HEM-7142T)
 ```kotlin
 private fun connectBpDevice(deviceAddress: String) {
     omronManager.connectBpDevice(deviceAddress)

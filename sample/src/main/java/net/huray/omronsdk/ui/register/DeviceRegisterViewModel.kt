@@ -67,7 +67,6 @@ class DeviceRegisterViewModel(
         if (omronManager.isScanning) {
             omronManager.stopScan()
         }
-
         omronManager.startScan()
     }
 
@@ -86,7 +85,7 @@ class DeviceRegisterViewModel(
             return
         }
 
-        if (omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T) {
+        if (omronDeviceType.isBloodPressureMonitor) {
             omronManager.connectBpDevice(deviceAddress)
             return
         }
@@ -119,6 +118,10 @@ class DeviceRegisterViewModel(
             }
             omronDeviceType.isHEM7155T -> {
                 PrefUtils.saveBpMonitorHem7155tAddress(deviceAddress)
+                return
+            }
+            omronDeviceType.isHEM7142T -> {
+                PrefUtils.saveBpMonitorHem7142tAddress(deviceAddress)
                 return
             }
         }

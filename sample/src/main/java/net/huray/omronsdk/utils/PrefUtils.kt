@@ -39,6 +39,20 @@ object PrefUtils {
     }
 
     /**
+     * 혈압계 HEM-7142T
+     */
+    fun saveBpMonitorHem7142tAddress(deviceAddress: String?) {
+        SHARED_PREFERENCES
+            .edit()
+            .putString(Const.PREF_HEM_7142T_ADDRESS, deviceAddress)
+            .apply()
+    }
+
+    fun getBpMonitorHem7142tAddress(): String? {
+        return SHARED_PREFERENCES.getString(Const.PREF_HEM_7142T_ADDRESS, null)
+    }
+
+    /**
      * 체성분계 HBF-222F
      */
     fun saveBodyCompositionMonitorHbf222tAddress(deviceAddress: String) {
