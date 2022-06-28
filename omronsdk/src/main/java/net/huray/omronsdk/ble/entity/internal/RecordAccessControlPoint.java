@@ -178,20 +178,6 @@ public class RecordAccessControlPoint {
             final byte[] packet;
             switch (opCode) {
                 case ReportStoredRecords:
-                    switch (operator) {
-                        case AllRecords:
-                            packet = new byte[2];
-                            break;
-                        case GreaterThanOrEqualTo:
-                            packet = new byte[5];
-                            packet[2] = FilterType.SequenceNumber.value();
-                            packet[3] = (byte) (sequenceNumber & 0x000000ff);
-                            packet[4] = (byte) ((sequenceNumber >> 8) & 0x000000ff);
-                            break;
-                        default:
-                            throw new AndroidRuntimeException("Invalid operator.");
-                    }
-                    break;
                 case ReportNumberOfStoredRecords:
                     switch (operator) {
                         case AllRecords:

@@ -125,11 +125,6 @@ public class UserControlPoint {
                     packet[2] = (byte) ((consentCode >> 8) & 0x000000ff);
                     break;
                 case RegisterNewUserWithUserIndex:
-                    packet = new byte[4];
-                    packet[1] = userIndex.byteValue();
-                    packet[2] = (byte) (consentCode & 0x000000ff);
-                    packet[3] = (byte) ((consentCode >> 8) & 0x000000ff);
-                    break;
                 case Consent:
                     packet = new byte[4];
                     packet[1] = userIndex.byteValue();
