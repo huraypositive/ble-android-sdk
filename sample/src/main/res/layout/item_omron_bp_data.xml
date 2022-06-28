@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
+<layout xmlns:tools="http://schemas.android.com/tools">
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -13,7 +13,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:gravity="center_vertical"
-            android:text="2021.07.16 오전 09:57"
+            tools:text="2021-07-16 09:57:30"
             android:textColor="@color/design_default_color_on_secondary"
             android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
@@ -23,8 +23,8 @@
             android:id="@+id/tv_omron_low_bp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="110"
+            android:layout_margin="22dp"
+            tools:text="110.0"
             android:textColor="@color/design_default_color_on_secondary"
             android:textSize="30sp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -47,7 +47,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
-            android:text="130"
+            tools:text="130.0"
             android:textColor="@color/design_default_color_on_secondary"
             android:textSize="30sp"
             app:layout_constraintBottom_toBottomOf="parent"

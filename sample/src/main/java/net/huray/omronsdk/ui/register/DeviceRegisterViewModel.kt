@@ -24,7 +24,7 @@ class DeviceRegisterViewModel(
     val loadingEvent: LiveData<Boolean> get() = _loadingEvent
 
     private val omronManager: OmronDeviceManager = OmronDeviceManager(
-        omronDeviceType,
+        omronDeviceType.category,
         OHQSessionType.REGISTER,
         this
     )
@@ -67,7 +67,9 @@ class DeviceRegisterViewModel(
         if (omronManager.isScanning) {
             omronManager.stopScan()
         }
-        omronManager.startScan()
+
+        val targets = listOf(omronDeviceType)
+        omronManager.startScan(targets)
     }
 
     fun cancel() {

@@ -33,8 +33,9 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     private final SessionController sessionController = new SessionController(this);
     private final LoggingManager loggingManager = new LoggingManager();
 
-    private final OmronDeviceType deviceType;
+    private final OHQDeviceCategory deviceCategory;
     private final OHQSessionType sessionType;
+    private List<OmronDeviceType> targetDevices;
 
     private RegisterListener registerListener;
     private TransferListener transferListener;
@@ -44,38 +45,95 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     private String deviceAddress;
 
     private boolean isScanning = false;
-    private boolean isScanAllCategory = false;
 
-    private OmronDeviceManager(OmronDeviceType deviceType, OHQSessionType sessionType) {
-        this.deviceType = deviceType;
+    private OmronDeviceManager(
+            OHQDeviceCategory deviceCategory,
+            OHQSessionType sessionType
+    ) {
+        this.deviceCategory = deviceCategory;
         this.sessionType = sessionType;
     }
 
-    public OmronDeviceManager(OmronDeviceType deviceType,
-                              OHQSessionType sessionType,
-                              RegisterListener listener) {
-        this(deviceType, sessionType);
+    public OmronDeviceManager(
+            OHQDeviceCategory deviceCategory,
+            OHQSessionType sessionType,
+            RegisterListener listener
+    ) {
+        this(deviceCategory, sessionType);
         this.registerListener = listener;
     }
 
-    public OmronDeviceManager(OmronDeviceType deviceType,
-                              OHQSessionType sessionType,
-                              TransferListener listener) {
-        this(deviceType, sessionType);
+    public OmronDeviceManager(
+            OHQDeviceCategory deviceCategory,
+            OHQSessionType sessionType,
+            TransferListener listener
+    ) {
+        this(deviceCategory, sessionType);
         this.transferListener = listener;
+    }
+
+    @Override
+    public void onScan(@NonNull @NotNull List<DiscoveredDevice> discoveredDevices) {
+        validateScanListener();
+
+        List<DiscoveredDevice> filteredList = new ArrayList<>();
+        for (DiscoveredDevice device : discoveredDevices) {
+            if (device.getLocalName() == null) continue;
+
+            if (isTargeted(device.getLocalName())) {
+                filteredList.add(device);
+            }
+        }
+
+        registerListener.onScanned(filteredList);
+    }
+
+    private boolean isTargeted(String localName) {
+        for (OmronDeviceType devices : targetDevices) {
+            if (devices.isTargeted(localName)) return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public void onScanCompletion(@NonNull @NotNull OHQCompletionReason reason) {
+    }
+
+    @Override
+    public void onConnectionStateChanged(@NonNull @NotNull OHQConnectionState connectionState) {
+    }
+
+    @Override
+    public void onSessionComplete(@NonNull @NotNull SessionData sessionData) {
+        OHQCompletionReason reason = sessionData.getCompletionReason();
+
+        assert reason != null;
+        if (reason.isCanceled() ||
+                reason.isFailedToConnect() ||
+                reason.isFailedToRegisterUser() ||
+                reason.isTimeOut()) {
+            setSessionFailed(sessionData.getCompletionReason());
+            return;
+        }
+
+        if (sessionType == OHQSessionType.REGISTER) {
+            validateScanListener();
+            registerListener.onRegisterSuccess();
+            return;
+        }
+
+        validateTransferListener();
+        transferListener.onTransferSuccess(sessionData);
     }
 
     public boolean isScanning() {
         return isScanning;
     }
 
-    public void startScan(Boolean scanAllCategory) {
-        isScanAllCategory = scanAllCategory;
-        startScan();
-    }
-
-    public void startScan() {
-        scanController.setFilteringDeviceCategory(deviceType.getOmronDeviceCategory());
+    public void startScan(List<OmronDeviceType> targetDevices) {
+        scanController.setFilteringDeviceCategory(deviceCategory);
+        this.targetDevices = targetDevices;
 
         if (isScanning) return;
 
@@ -154,7 +212,7 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     }
 
     private Map<OHQSessionOptionKey, Object> getOptionKeys() {
-        if (deviceType.getOmronDeviceCategory() == OHQDeviceCategory.WeightScale) {
+        if (deviceCategory == OHQDeviceCategory.WeightScale) {
             if (weightDeviceInfo == null) {
                 throw new NullPointerException("weightDeviceInfo is null");
             }
@@ -191,57 +249,6 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
         }
 
         return false;
-    }
-
-    @Override
-    public void onScan(@NonNull @NotNull List<DiscoveredDevice> discoveredDevices) {
-        validateScanListener();
-
-        if (isScanAllCategory) {
-            registerListener.onScanned(discoveredDevices);
-            return;
-        }
-
-        List<DiscoveredDevice> filteredList = new ArrayList<>();
-        for (DiscoveredDevice device : discoveredDevices) {
-            if (device.getLocalName() == null) continue;
-            if (device.getLocalName().startsWith(deviceType.getTypeId())) {
-                filteredList.add(device);
-            }
-        }
-
-        registerListener.onScanned(filteredList);
-    }
-
-    @Override
-    public void onScanCompletion(@NonNull @NotNull OHQCompletionReason reason) {
-    }
-
-    @Override
-    public void onConnectionStateChanged(@NonNull @NotNull OHQConnectionState connectionState) {
-    }
-
-    @Override
-    public void onSessionComplete(@NonNull @NotNull SessionData sessionData) {
-        OHQCompletionReason reason = sessionData.getCompletionReason();
-
-        assert reason != null;
-        if (reason.isCanceled() ||
-                reason.isFailedToConnect() ||
-                reason.isFailedToRegisterUser() ||
-                reason.isTimeOut()) {
-            setSessionFailed(sessionData.getCompletionReason());
-            return;
-        }
-
-        if (sessionType == OHQSessionType.REGISTER) {
-            validateScanListener();
-            registerListener.onRegisterSuccess();
-            return;
-        }
-
-        validateTransferListener();
-        transferListener.onTransferSuccess(sessionData);
     }
 
     private void setSessionFailed(OHQCompletionReason reason) {

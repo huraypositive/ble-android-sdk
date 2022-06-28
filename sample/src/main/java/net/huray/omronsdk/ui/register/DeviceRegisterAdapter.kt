@@ -43,7 +43,8 @@ class DeviceRegisterAdapter(
         devices.clear()
 
         for (device in datum) {
-            devices.add(Device(omronDeviceType.getName(), device.address))
+            val modelName = OmronDeviceType.getModelNameBy(device.localName)
+            devices.add(Device(modelName, device.address))
             notifyItemChanged(devices.lastIndex)
         }
     }

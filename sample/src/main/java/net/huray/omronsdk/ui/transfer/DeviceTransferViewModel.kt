@@ -33,7 +33,7 @@ class DeviceTransferViewModel(
     val noDataEvent: LiveData<Boolean> get() = _noDataEvent
 
     private val omronManager: OmronDeviceManager = OmronDeviceManager(
-        omronDeviceType,
+        omronDeviceType.category,
         OHQSessionType.TRANSFER,
         this
     )

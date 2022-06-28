@@ -60,7 +60,7 @@ class App : Application {
 ```kotlin
 // 파라미터로 넘겨주는 sessionType이  `REGISTER`임에 유의한다.
 private val omronManager: OmronDeviceManager = OmronDeviceManager(
-    omronDeviceType.omronDeviceCategory,
+    deviceCategory,
     OHQSessionType.REGISTER,
     this
 )
@@ -86,12 +86,12 @@ class DeviceRegisterViewModel() : ViewModel(), OmronDeviceManager.RegisterListen
 
 #### 2-3. 기기 스캔
 ```kotlin
-fun startScan() {
+fun startScan(targetDevices: List<OmronDeviceType>) {
     if (omronManager.isScanning()) {
         return
     }
     
-    omronManager.startScan()
+    omronManager.startScan(targetDevices)
 }
 ```
 
@@ -124,7 +124,7 @@ private fun connectBpDevice(deviceAddress: String) {
 ```kotlin
 // 파라미터로 넘겨주는 sessionType이  `TRANSFER`임에 유의한다.
 private val omronManager: OmronDeviceManager = OmronDeviceManager(
-    omronDeviceType.omronDeviceCategory,
+    deviceCategory,
     OHQSessionType.TRANSFER,
     this
 )
