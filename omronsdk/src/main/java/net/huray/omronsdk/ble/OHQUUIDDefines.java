@@ -87,6 +87,7 @@ class OHQUUIDDefines {
         MeshProvisioningService("1827", "Mesh Provisioning Service"),
         MeshProxyService("1828", "Mesh Proxy Service"),
 
+        OmronOptionService("5DF5E817-A945-4F81-89C0-3D4E9759C07C", "Defined as RACP and OMRON Measurement characteristic by OMRON."),
         OmronOptionalService("5DF5E817-A945-4F81-89C0-3D4E9759C07C", "Omron Optional Service"),
         OmronCustomPLXService("6E400001-B5A3-F393-EFA9-E50E24DCCA9E", "Omron Custom PLX Service"),;
         @NonNull
@@ -335,6 +336,7 @@ class OHQUUIDDefines {
         FitnessMachineControlPoint("2AD9", "Fitness Machine Control Point"),
         FitnessMachineStatus("2ADA", "Fitness Machine Status"),
 
+        OmronMeasurement("C195DA8A-0E23-4582-ACD8-D446C77C45DE", "Getting extended blood pressure measurment index by OMRON."),
         OmronMeasurementWS("8FF2DDFB-4A52-4CE5-85A4-D2F97917792A", "Omron Measurement(WS)"),
         OmronCustomPLXFeatures("6E4000F0-B5A3-F393-EFA9-E50E24DCCA9E", "Omron Custom PLX Feature"),
         OmronCustomPLXSpotCheckMeasurement("6E4000F1-B5A3-F393-EFA9-E50E24DCCA9E", "Omron Custom PLX SpotCheckMeasurement"),
