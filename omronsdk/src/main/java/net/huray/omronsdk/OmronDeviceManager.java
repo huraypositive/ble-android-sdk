@@ -1,6 +1,7 @@
 package net.huray.omronsdk;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import net.huray.omronsdk.ble.controller.ScanController;
 import net.huray.omronsdk.ble.controller.SessionController;
@@ -35,16 +36,10 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
 
     private final OHQDeviceCategory deviceCategory;
     private final OHQSessionType sessionType;
-    private List<OmronDeviceType> targetDevices;
+    private final List<OmronDeviceType> targetDevices = new ArrayList<>();
 
     private RegisterListener registerListener;
     private TransferListener transferListener;
-
-    private WeightDeviceInfo weightDeviceInfo;
-
-    private String deviceAddress;
-
-    private boolean isScanning = false;
 
     private OmronDeviceManager(
             OHQDeviceCategory deviceCategory,
@@ -88,14 +83,6 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
         registerListener.onScanned(filteredList);
     }
 
-    private boolean isTargeted(String localName) {
-        for (OmronDeviceType devices : targetDevices) {
-            if (devices.isTargeted(localName)) return true;
-        }
-
-        return false;
-    }
-
     @Override
     public void onScanCompletion(@NonNull @NotNull OHQCompletionReason reason) {
     }
@@ -127,53 +114,38 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
         transferListener.onTransferSuccess(sessionData);
     }
 
-    public boolean isScanning() {
-        return isScanning;
-    }
-
     public void startScan(List<OmronDeviceType> targetDevices) {
         scanController.setFilteringDeviceCategory(deviceCategory);
-        this.targetDevices = targetDevices;
+        this.targetDevices.clear();
+        this.targetDevices.addAll(targetDevices);
 
-        if (isScanning) return;
-
-        isScanning = true;
+        stopScan();
         scanController.startScan();
     }
 
     public void stopScan() {
-        if (isScanning) {
-            isScanning = false;
-            scanController.stopScan();
-        }
+        scanController.stopScan();
     }
 
     public void connectWeightDevice(WeightDeviceInfo info) {
-        weightDeviceInfo = info;
-        deviceAddress = info.getAddress();
         stopScan();
 
-        startOmronSession();
+        startSession(info.getAddress(), info);
     }
 
     public void connectBpDevice(String address) {
-        deviceAddress = address;
         stopScan();
 
-        startOmronSession();
+        startSession(address, null);
     }
 
     public void requestWeightData(WeightDeviceInfo info) {
-        weightDeviceInfo = info;
-        deviceAddress = info.getAddress();
-
-        startOmronSession();
+        startSession(info.getAddress(), info);
     }
 
     public void requestBpData(String address) {
-        deviceAddress = address;
 
-        startOmronSession();
+        startSession(address, null);
     }
 
     public void cancelSession() {
@@ -184,7 +156,7 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
      * 오므론 기기와 연결하는 세션을 시작한다.
      * 세션은 기기와 최초 연결 그리고 데이터 수신을 위한 연결에 사용한다.
      */
-    private void startOmronSession() {
+    private void startSession(String deviceAddress, @Nullable WeightDeviceInfo weightDeviceInfo) {
         if (sessionController.isInSession()) {
             AppLog.i("세션이 이미 시작되었음");
             return;
@@ -205,13 +177,13 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
             private void onStarted() {
                 handler.post(() -> {
                     sessionController.setConfig(OmronOption.getConfig());
-                    sessionController.startSession(deviceAddress, getOptionKeys());
+                    sessionController.startSession(deviceAddress, getOptionKeys(weightDeviceInfo));
                 });
             }
         });
     }
 
-    private Map<OHQSessionOptionKey, Object> getOptionKeys() {
+    private Map<OHQSessionOptionKey, Object> getOptionKeys(@Nullable WeightDeviceInfo weightDeviceInfo) {
         if (deviceCategory == OHQDeviceCategory.WeightScale) {
             if (weightDeviceInfo == null) {
                 throw new NullPointerException("weightDeviceInfo is null");
@@ -270,6 +242,14 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
         if (transferListener == null) {
             throw new IllegalStateException("TransferListener is not initialized");
         }
+    }
+
+    private boolean isTargeted(String localName) {
+        for (OmronDeviceType devices : targetDevices) {
+            if (devices.isSameModel(localName)) return true;
+        }
+
+        return false;
     }
 
     public interface RegisterListener {

@@ -1,7 +1,6 @@
 package net.huray.omronsdk.ui.device_list
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -39,28 +38,28 @@ class DeviceListActivity : AppCompatActivity(), DeviceItemClickListener {
         super.onResume()
     }
 
-    override fun onItemClicked(isConnected: Boolean, deviceNumber: Int) {
-        moveScreen(isConnected, deviceNumber)
+    override fun onItemClicked(isConnected: Boolean, deviceId: Int) {
+        moveScreen(isConnected, deviceId)
     }
 
-    private fun moveScreen(isConnected: Boolean, deviceNumber: Int) {
+    private fun moveScreen(isConnected: Boolean, deviceId: Int) {
         if (isPermissionGranted) {
-            moveToActivity(isConnected, deviceNumber)
+            moveToActivity(isConnected, deviceId)
             return
         }
         requestPermission()
     }
 
-    private fun moveToActivity(isConnected: Boolean, deviceNumber: Int) {
+    private fun moveToActivity(isConnected: Boolean, deviceId: Int) {
         if (isConnected) {
             val intent = Intent(this, DeviceTransferActivity::class.java)
-            intent.putExtra(Const.EXTRA_DEVICE_TYPE, deviceNumber)
+            intent.putExtra(Const.EXTRA_DEVICE_TYPE, deviceId)
             startActivity(intent)
             return
         }
 
         val intent = Intent(this, DeviceRegisterActivity::class.java)
-        intent.putExtra(Const.EXTRA_DEVICE_TYPE, deviceNumber)
+        intent.putExtra(Const.EXTRA_DEVICE_TYPE, deviceId)
         startActivity(intent)
     }
 

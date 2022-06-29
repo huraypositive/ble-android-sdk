@@ -48,9 +48,7 @@ class DeviceTransferViewModel(
 
         when {
             results.isNullOrEmpty() -> _noDataEvent.postValue(true)
-            omronDeviceType.isHEM9200T ||
-                    omronDeviceType.isHEM7155T ||
-                    omronDeviceType.isHEM7142T -> updateBloodPressureData(results)
+            omronDeviceType.isBloodPressureMonitor -> updateBloodPressureData(results)
             omronDeviceType.isHBF222F -> {
                 updateBodyCompositionData(results)
                 handleBodyCompositionSettingAfterTransfer(sessionData)

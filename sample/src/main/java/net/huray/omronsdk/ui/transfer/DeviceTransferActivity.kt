@@ -21,8 +21,8 @@ class DeviceTransferActivity : BaseActivity() {
     private lateinit var omronDeviceType: OmronDeviceType
 
     private val viewModel: DeviceTransferViewModel by viewModelsFactory {
-        val typeNumber = intent.getIntExtra(Const.EXTRA_DEVICE_TYPE, 0)
-        omronDeviceType = OmronDeviceType.getDeviceType(typeNumber)
+        val deviceId = intent.getIntExtra(Const.EXTRA_DEVICE_TYPE, 0)
+        omronDeviceType = OmronDeviceType.fromId(deviceId)
 
         DeviceTransferViewModel(omronDeviceType)
     }
@@ -40,7 +40,7 @@ class DeviceTransferActivity : BaseActivity() {
     }
 
     private fun initViews() {
-        binding.tvRequestOmronTitle.text = omronDeviceType.getName()
+        binding.tvRequestOmronTitle.text = omronDeviceType.modelName
         binding.tvDisconnectOmronDevice.setOnClickListener { showConfirmDialog() }
 
         adapter = DeviceTransferAdapter(omronDeviceType)

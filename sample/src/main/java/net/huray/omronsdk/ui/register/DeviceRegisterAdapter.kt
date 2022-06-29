@@ -11,7 +11,6 @@ import java.util.*
 
 class DeviceRegisterAdapter(
     private val clickListener: ScannedItemClickListener,
-    private val omronDeviceType: OmronDeviceType
 ) : RecyclerView.Adapter<DeviceRegisterViewHolder>() {
 
     private val devices: MutableList<Device> = ArrayList()
@@ -43,8 +42,8 @@ class DeviceRegisterAdapter(
         devices.clear()
 
         for (device in datum) {
-            val modelName = OmronDeviceType.getModelNameBy(device.localName)
-            devices.add(Device(modelName, device.address))
+            val deviceType = OmronDeviceType.fromLocalName(device.localName)
+            devices.add(Device(deviceType.modelName, device.address))
             notifyItemChanged(devices.lastIndex)
         }
     }

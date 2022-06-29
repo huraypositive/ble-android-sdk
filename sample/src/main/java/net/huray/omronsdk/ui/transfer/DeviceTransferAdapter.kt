@@ -15,7 +15,7 @@ class DeviceTransferAdapter(
     private val healthDataList = mutableListOf<OmronHealthData>()
 
     override fun getItemViewType(position: Int): Int {
-        return omronDeviceType.number
+        return omronDeviceType.id
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -24,11 +24,7 @@ class DeviceTransferAdapter(
 
         val view = LayoutInflater
             .from(parent.context)
-            .inflate(
-                itemRes,
-                parent,
-                false
-            )
+            .inflate(itemRes, parent, false)
 
         if (omronDeviceType.isHBF222F) return WeightDataViewHolder(view)
         return BpDataViewHolder(view)

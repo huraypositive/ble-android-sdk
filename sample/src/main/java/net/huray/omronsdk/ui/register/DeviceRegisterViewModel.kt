@@ -64,10 +64,6 @@ class DeviceRegisterViewModel(
     }
 
     fun startScan() {
-        if (omronManager.isScanning) {
-            omronManager.stopScan()
-        }
-
         val targets = listOf(omronDeviceType)
         omronManager.startScan(targets)
     }

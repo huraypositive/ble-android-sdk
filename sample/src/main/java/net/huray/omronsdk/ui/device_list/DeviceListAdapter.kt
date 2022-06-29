@@ -30,13 +30,13 @@ class DeviceListAdapter(private val clickListener: DeviceItemClickListener) :
     }
 
     override fun onBindViewHolder(holder: DeviceListViewHolder, position: Int) {
-        holder.tvDevice.text = deviceStates[position].deviceType.getName()
+        holder.tvDevice.text = deviceStates[position].deviceType.modelName
         setIndicator(holder.ivConnectionIndicator, position)
 
         holder.viewGroup.setOnClickListener {
             clickListener.onItemClicked(
                 deviceStates[position].isConnected,
-                deviceStates[position].deviceType.number
+                deviceStates[position].deviceType.id
             )
         }
     }

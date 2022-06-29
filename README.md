@@ -87,10 +87,6 @@ class DeviceRegisterViewModel() : ViewModel(), OmronDeviceManager.RegisterListen
 #### 2-3. 기기 스캔
 ```kotlin
 fun startScan(targetDevices: List<OmronDeviceType>) {
-    if (omronManager.isScanning()) {
-        return
-    }
-    
     omronManager.startScan(targetDevices)
 }
 ```

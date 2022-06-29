@@ -25,8 +25,8 @@ class DeviceRegisterActivity : BaseActivity(), ScannedItemClickListener {
     private val radioButtons = mutableListOf<Int>()
 
     private val viewModel: DeviceRegisterViewModel by viewModelsFactory {
-        val typeNumber = intent.getIntExtra(Const.EXTRA_DEVICE_TYPE, 0)
-        omronDeviceType = OmronDeviceType.getDeviceType(typeNumber)
+        val deviceId = intent.getIntExtra(Const.EXTRA_DEVICE_TYPE, 0)
+        omronDeviceType = OmronDeviceType.fromId(deviceId)
 
         DeviceRegisterViewModel(omronDeviceType)
     }
@@ -79,9 +79,9 @@ class DeviceRegisterActivity : BaseActivity(), ScannedItemClickListener {
     }
 
     private fun initViews() {
-        adapter = DeviceRegisterAdapter(this, omronDeviceType)
+        adapter = DeviceRegisterAdapter(this)
 
-        binding.tvScanTitle.text = omronDeviceType.getName()
+        binding.tvScanTitle.text = omronDeviceType.modelName
         binding.rvScannedDeviceList.adapter = adapter
 
         initRadioButtons()
@@ -137,7 +137,7 @@ class DeviceRegisterActivity : BaseActivity(), ScannedItemClickListener {
 
     private fun moveToRequestActivity() {
         val intent = Intent(this, DeviceTransferActivity::class.java)
-        intent.putExtra(Const.EXTRA_DEVICE_TYPE, omronDeviceType.number)
+        intent.putExtra(Const.EXTRA_DEVICE_TYPE, omronDeviceType.id)
         startActivity(intent)
         finish()
     }
