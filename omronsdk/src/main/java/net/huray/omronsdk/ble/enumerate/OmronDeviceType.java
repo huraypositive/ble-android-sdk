@@ -71,6 +71,10 @@ public enum OmronDeviceType {
         return category == OHQDeviceCategory.BloodPressureMonitor;
     }
 
+    public boolean isWeightDevice() {
+        return category == OHQDeviceCategory.WeightScale;
+    }
+
     public boolean isSameModel(String localName) {
         return localName.startsWith(this.localName);
     }

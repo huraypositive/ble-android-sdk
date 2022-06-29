@@ -163,12 +163,12 @@ class DeviceTransferViewModel : ViewModel(), OmronDeviceManager.TransferListener
 
     // 먼저 기기에서 측정 완료된 후 아래와 같이 데이터 요청
     fun requestData() {
-        if (omronDeviceType.isHEM9200T || omronDeviceType.isHEM7155T) {
+        if (omronDeviceType.isBloodPressureMonitor()) {
             omronManager.requestBpData(deviceAddress)
             return
         }
 
-        if (omronDeviceType.isWeightDevice) {
+        if (omronDeviceType.isWeightDevice()) {
             omronManager.requestWeightData(deviceInfo)
         }
     }
