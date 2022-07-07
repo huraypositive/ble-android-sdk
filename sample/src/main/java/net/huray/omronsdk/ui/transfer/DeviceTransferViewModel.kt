@@ -3,6 +3,7 @@ package net.huray.omronsdk.ui.transfer
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import net.huray.omronsdk.App
 import net.huray.omronsdk.OmronDeviceManager
 import net.huray.omronsdk.ble.entity.SessionData
 import net.huray.omronsdk.ble.enumerate.OHQCompletionReason
@@ -33,6 +34,7 @@ class DeviceTransferViewModel(
     val noDataEvent: LiveData<Boolean> get() = _noDataEvent
 
     private val omronManager: OmronDeviceManager = OmronDeviceManager(
+        App.instance,
         omronDeviceType.category,
         OHQSessionType.TRANSFER,
         this

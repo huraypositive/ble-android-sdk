@@ -9,11 +9,6 @@ class App : Application() {
         application = this
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        OHQDeviceManager.init(applicationContext)
-    }
-
     companion object {
         private lateinit var application: App
 

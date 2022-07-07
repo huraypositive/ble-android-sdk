@@ -3,6 +3,7 @@ package net.huray.omronsdk.ui.register
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import net.huray.omronsdk.App
 import net.huray.omronsdk.OmronDeviceManager
 import net.huray.omronsdk.ble.entity.DiscoveredDevice
 import net.huray.omronsdk.ble.entity.WeightDeviceInfo
@@ -24,6 +25,7 @@ class DeviceRegisterViewModel(
     val loadingEvent: LiveData<Boolean> get() = _loadingEvent
 
     private val omronManager: OmronDeviceManager = OmronDeviceManager(
+        App.instance,
         omronDeviceType.category,
         OHQSessionType.REGISTER,
         this

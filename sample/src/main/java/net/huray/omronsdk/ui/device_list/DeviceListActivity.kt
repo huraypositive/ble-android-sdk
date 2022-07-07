@@ -2,26 +2,47 @@ package net.huray.omronsdk.ui.device_list
 
 import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Build.VERSION_CODES.S
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import com.gun0912.tedpermission.PermissionListener
+import com.gun0912.tedpermission.TedPermissionUtil
+import com.gun0912.tedpermission.normal.TedPermission
 import net.huray.omronsdk.databinding.ActivityDeviceListBinding
 import net.huray.omronsdk.ui.register.DeviceRegisterActivity
 import net.huray.omronsdk.ui.transfer.DeviceTransferActivity
 import net.huray.omronsdk.utils.Const
 
-class DeviceListActivity : AppCompatActivity(), DeviceItemClickListener {
-    private val permission = Manifest.permission.ACCESS_FINE_LOCATION
+class DeviceListActivity : AppCompatActivity(), DeviceItemClickListener, PermissionListener {
+    private val permissions: List<String>
+        get() {
+            val list = mutableListOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            )
+
+            if (Build.VERSION.SDK_INT >= S) {
+                list.add(Manifest.permission.BLUETOOTH_SCAN)
+                list.add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
+
+            return list
+        }
 
     private var adapter: DeviceListAdapter = DeviceListAdapter(this)
 
     private lateinit var binding: ActivityDeviceListBinding
 
     private val isPermissionGranted: Boolean
-        get() = ContextCompat.checkSelfPermission(this, permission) ==
-                PackageManager.PERMISSION_GRANTED
+        get() {
+            if (permissions.isEmpty()) {
+                return true
+            }
+
+            return TedPermissionUtil.isGranted(*permissions.toTypedArray())
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +61,14 @@ class DeviceListActivity : AppCompatActivity(), DeviceItemClickListener {
 
     override fun onItemClicked(isConnected: Boolean, deviceId: Int) {
         moveScreen(isConnected, deviceId)
+    }
+
+    override fun onPermissionGranted() {
+        Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
+        Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show()
     }
 
     private fun moveScreen(isConnected: Boolean, deviceId: Int) {
@@ -65,10 +94,8 @@ class DeviceListActivity : AppCompatActivity(), DeviceItemClickListener {
 
     private fun requestPermission() {
         if (isPermissionGranted) return
-        ActivityCompat.requestPermissions(this, arrayOf(permission), REQUEST_CODE)
-    }
-
-    companion object {
-        const val REQUEST_CODE = 11
+        TedPermission.create()
+            .setPermissionListener(this)
+            .setPermissions(*permissions.toTypedArray()).check()
     }
 }

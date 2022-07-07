@@ -1,8 +1,11 @@
 package net.huray.omronsdk;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import net.huray.omronsdk.ble.OHQDeviceManager;
 import net.huray.omronsdk.ble.controller.ScanController;
 import net.huray.omronsdk.ble.controller.SessionController;
 import net.huray.omronsdk.ble.controller.util.AppLog;
@@ -30,8 +33,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class OmronDeviceManager implements ScanController.Listener, SessionController.Listener {
-    private final ScanController scanController = new ScanController(this);
-    private final SessionController sessionController = new SessionController(this);
+    private final ScanController scanController;
+    private final SessionController sessionController;
     private final LoggingManager loggingManager = new LoggingManager();
 
     private final OHQDeviceCategory deviceCategory;
@@ -42,28 +45,35 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     private TransferListener transferListener;
 
     private OmronDeviceManager(
+            Context context,
             OHQDeviceCategory deviceCategory,
             OHQSessionType sessionType
     ) {
+        OHQDeviceManager.init(context);
+
+        scanController = new ScanController(this);
+        sessionController = new SessionController(this);
         this.deviceCategory = deviceCategory;
         this.sessionType = sessionType;
     }
 
     public OmronDeviceManager(
+            Context context,
             OHQDeviceCategory deviceCategory,
             OHQSessionType sessionType,
             RegisterListener listener
     ) {
-        this(deviceCategory, sessionType);
+        this(context, deviceCategory, sessionType);
         this.registerListener = listener;
     }
 
     public OmronDeviceManager(
+            Context context,
             OHQDeviceCategory deviceCategory,
             OHQSessionType sessionType,
             TransferListener listener
     ) {
-        this(deviceCategory, sessionType);
+        this(context, deviceCategory, sessionType);
         this.transferListener = listener;
     }
 

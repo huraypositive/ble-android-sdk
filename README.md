@@ -41,32 +41,26 @@ dependencies {
 <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-```
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
-## 1. OHQDeviceManager 초기화
-#### SDK를 사용하기 전 OHQDeviceManager 인스턴스를 초기화해줘야 한다. 
-```kotlin
-// in your App.kt
-class App : Application {
-    override fun onCreate() {
-        super.onCreate()
-        OHQDeviceManager.init(applicationContext)
-    }
-}
 ```
+- Location, Scan, Connect 권한은 런타임에서 명시적으로 요청해야 한다.
+- [공식문서](https://developer.android.com/guide/topics/connectivity/bluetooth/permissionss) 참고
 
-## 2. 기기 등록 (Register)
-#### 2-1. OmronManager 객체 초기화
+## 1. 기기 등록 (Register)
+#### 1-1. OmronManager 객체 초기화
 ```kotlin
 // 파라미터로 넘겨주는 sessionType이  `REGISTER`임에 유의한다.
 private val omronManager: OmronDeviceManager = OmronDeviceManager(
+    context, 
     deviceCategory,
     OHQSessionType.REGISTER,
     this
 )
 ```
 
-#### 2-2. 사용할 클래스(예: `ViewModel`)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
+#### 1-2. 사용할 클래스(예: `ViewModel`)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
 ```kotlin
 class DeviceRegisterViewModel() : ViewModel(), OmronDeviceManager.RegisterListener {
     override fun onScanned(discoveredDevices: List<DiscoveredDevice>?) {
@@ -84,14 +78,14 @@ class DeviceRegisterViewModel() : ViewModel(), OmronDeviceManager.RegisterListen
 }
 ```
 
-#### 2-3. 기기 스캔
+#### 1-3. 기기 스캔
 ```kotlin
 fun startScan(targetDevices: List<OmronDeviceType>) {
     omronManager.startScan(targetDevices)
 }
 ```
 
-#### 2-4a. 기기 연결 (체성분계 - HBF-222T)
+#### 1-4a. 기기 연결 (체성분계 - HBF-222T)
 ```kotlin
 private fun connectWeightDevice(deviceAddress: String, userIndex: Int) {
     if (userIndex == 0) {
@@ -105,7 +99,7 @@ private fun connectWeightDevice(deviceAddress: String, userIndex: Int) {
 }
 ```
 
-#### 2-4a. 기기 연결 (혈압계 - HEM-9200T, HEM-7155T, HEM-7142T)
+#### 1-4a. 기기 연결 (혈압계 - HEM-9200T, HEM-7155T, HEM-7142T)
 ```kotlin
 private fun connectBpDevice(deviceAddress: String) {
     omronManager.connectBpDevice(deviceAddress)
@@ -115,18 +109,19 @@ private fun connectBpDevice(deviceAddress: String) {
 `NOTE`: HEM-7155T 모델의 경우 기기에서 userIndex를 선택할 수 있으나, 측정 기록을 가져올 때 userIndex를 기기로 전달해서 인덱스에 해당하는 기록만 가져오는 기능을 제공하지 않는다. 
 따라서 해당 기능을 구현하려면 userIndex 값을 SharedPreferences등을 사용해 로컬에 저장한 후 측정시 넘어온 데이터에서 userIndex를 필터링 하여 사용하는 수밖에 없다.
 
-## 3. 측정 데이터 가져오기 (Transfer)
-#### 3-1. OmronManager 객체 초기화
+## 2. 측정 데이터 가져오기 (Transfer)
+#### 2-1. OmronManager 객체 초기화
 ```kotlin
 // 파라미터로 넘겨주는 sessionType이  `TRANSFER`임에 유의한다.
 private val omronManager: OmronDeviceManager = OmronDeviceManager(
+    context,
     deviceCategory,
     OHQSessionType.TRANSFER,
     this
 )
 ```
 
-#### 3-2. 사용할 클래스(예: `ViewModel`)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
+#### 2-2. 사용할 클래스(예: `ViewModel`)에 OmronDeviceManager.RegisterListener 인터페이스를 구현한다.
 ```kotlin
 class DeviceTransferViewModel : ViewModel(), OmronDeviceManager.TransferListener {
     override fun onTransferFailed(reason: OHQCompletionReason?) {
