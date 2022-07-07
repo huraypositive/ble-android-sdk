@@ -194,7 +194,8 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     }
 
     private Map<OHQSessionOptionKey, Object> getOptionKeys(@Nullable WeightDeviceInfo weightDeviceInfo) {
-        if (deviceCategory == OHQDeviceCategory.WeightScale || deviceCategory == OHQDeviceCategory.BodyCompositionMonitor) {
+        if (deviceCategory == OHQDeviceCategory.WeightScale ||
+                deviceCategory == OHQDeviceCategory.BodyCompositionMonitor) {
             if (weightDeviceInfo == null) {
                 throw new NullPointerException("weightDeviceInfo is null");
             }
