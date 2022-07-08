@@ -33,6 +33,9 @@ import java.util.Map;
 import java.util.Objects;
 
 public class OmronDeviceManager implements ScanController.Listener, SessionController.Listener {
+    final private static int DEFAULT_WAIT_TIME = 30;
+    final private static int MAX_WAIT_TIME = 300;
+
     private final ScanController scanController;
     private final SessionController sessionController;
     private final LoggingManager loggingManager = new LoggingManager();
@@ -138,24 +141,39 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     }
 
     public void connectWeightDevice(WeightDeviceInfo info) {
+        connectWeightDevice(info, null);
+    }
+
+    public void connectWeightDevice(WeightDeviceInfo info, @Nullable Integer waitTimeSec) {
         stopScan();
 
-        startSession(info.getAddress(), info);
+        startSession(info.getAddress(), info, waitTimeSec);
     }
 
     public void connectBpDevice(String address) {
+        connectBpDevice(address, null);
+    }
+
+    public void connectBpDevice(String address, @Nullable Integer waitTimeSec) {
         stopScan();
 
-        startSession(address, null);
+        startSession(address, null, waitTimeSec);
     }
 
     public void requestWeightData(WeightDeviceInfo info) {
-        startSession(info.getAddress(), info);
+        requestWeightData(info, null);
+    }
+
+    public void requestWeightData(WeightDeviceInfo info, @Nullable Integer waitTimeSec) {
+        startSession(info.getAddress(), info, waitTimeSec);
     }
 
     public void requestBpData(String address) {
+        requestBpData(address, null);
+    }
 
-        startSession(address, null);
+    public void requestBpData(String address, @Nullable Integer waitTimeSec) {
+        startSession(address, null, waitTimeSec);
     }
 
     public void cancelSession() {
@@ -165,8 +183,15 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
     /**
      * 오므론 기기와 연결하는 세션을 시작한다.
      * 세션은 기기와 최초 연결 그리고 데이터 수신을 위한 연결에 사용한다.
+     *
+     * @waitTimeSec session에 적용하는 타임아웃(초)
+     * 최소 30초, 최대 300초이며, 이외의 범위에서는 기본값 30초로 적용된다.
      */
-    private void startSession(String deviceAddress, @Nullable WeightDeviceInfo weightDeviceInfo) {
+    private void startSession(
+            String deviceAddress,
+            @Nullable WeightDeviceInfo weightDeviceInfo,
+            @Nullable Integer waitTimeSec
+    ) {
         if (sessionController.isInSession()) {
             AppLog.i("세션이 이미 시작되었음");
             return;
@@ -185,24 +210,42 @@ public class OmronDeviceManager implements ScanController.Listener, SessionContr
             }
 
             private void onStarted() {
+                final int timeout = getSessionTimeOut(waitTimeSec);
+
                 handler.post(() -> {
                     sessionController.setConfig(OmronOption.getConfig());
-                    sessionController.startSession(deviceAddress, getOptionKeys(weightDeviceInfo));
+                    sessionController.startSession(deviceAddress, getOptionKeys(weightDeviceInfo, timeout));
                 });
             }
         });
     }
 
-    private Map<OHQSessionOptionKey, Object> getOptionKeys(@Nullable WeightDeviceInfo weightDeviceInfo) {
+    private int getSessionTimeOut(@Nullable Integer customWaitTime) {
+        if (customWaitTime == null) {
+            return DEFAULT_WAIT_TIME;
+        }
+
+        if (customWaitTime <= DEFAULT_WAIT_TIME) {
+            return DEFAULT_WAIT_TIME;
+        }
+
+        if (customWaitTime >= MAX_WAIT_TIME) {
+            return MAX_WAIT_TIME;
+        }
+
+        return customWaitTime;
+    }
+
+    private Map<OHQSessionOptionKey, Object> getOptionKeys(@Nullable WeightDeviceInfo weightDeviceInfo, int waitTimeSec) {
         if (deviceCategory == OHQDeviceCategory.WeightScale ||
                 deviceCategory == OHQDeviceCategory.BodyCompositionMonitor) {
             if (weightDeviceInfo == null) {
                 throw new NullPointerException("weightDeviceInfo is null");
             }
-            return OmronOption.getWeightOptionsKeys(weightDeviceInfo);
+            return OmronOption.getWeightOptionsKeys(weightDeviceInfo, waitTimeSec);
         }
 
-        return OmronOption.getOptionsKeys(sessionType);
+        return OmronOption.getOptionsKeys(waitTimeSec);
     }
 
     /**

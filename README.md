@@ -46,6 +46,7 @@ dependencies {
 
 ```
 - Location, Scan, Connect 권한은 런타임에서 명시적으로 요청해야 한다.
+- Android 기기의 OS 버전이 12 이상인 경우, OmronDeviceManager 객체를 초기화하기 전에 Scan, Connect의 권한이 허용되어있지 않다면 `java.lang.SecurityException` 예외가 발생한다. 따라서 권한이 허용되어있지 않았을 때 OmronDeviceManager를 사용하는 화면으로 진입하지 못하도록 로직을 구성해야 함에 유의한다. 
 - [공식문서](https://developer.android.com/guide/topics/connectivity/bluetooth/permissionss) 참고
 
 ## 1. 기기 등록 (Register)

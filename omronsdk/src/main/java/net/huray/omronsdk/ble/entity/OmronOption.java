@@ -13,8 +13,6 @@ import java.util.Map;
 
 public class OmronOption {
     private static final int CONSENT_CODE_OHQ = 0x020E;
-    private static final long REGISTER_WAIT_TIME = 30 * 1000L;
-    private static final long REQUEST_WAIT_TIME = 30 * 1000L;
 
     public static Bundle getConfig() {
         CBConfig.CreateBondOption cOption = CBConfig.CreateBondOption.UsedBeforeGattConnection;
@@ -39,19 +37,19 @@ public class OmronOption {
     /**
      * 체성분계, 혈압계 공통 옵션 설정
      * */
-    public static Map<OHQSessionOptionKey, Object> getOptionsKeys(OHQSessionType sessionType) {
-        Map<OHQSessionOptionKey, Object> options = new HashMap<>();
-        long waitTime = sessionType == OHQSessionType.REGISTER ? REGISTER_WAIT_TIME : REQUEST_WAIT_TIME;
+    public static Map<OHQSessionOptionKey, Object> getOptionsKeys(int waitTimeSeconds) {
+        final long waitTimeMillis = waitTimeSeconds * 1000L;
 
+        Map<OHQSessionOptionKey, Object> options = new HashMap<>();
         options.put(OHQSessionOptionKey.ConsentCodeKey, CONSENT_CODE_OHQ);
-        options.put(OHQSessionOptionKey.ConnectionWaitTimeKey, waitTime);
+        options.put(OHQSessionOptionKey.ConnectionWaitTimeKey, waitTimeMillis);
         options.put(OHQSessionOptionKey.ReadMeasurementRecordsKey, true);
 
         return options;
     }
 
-    public static Map<OHQSessionOptionKey, Object> getWeightOptionsKeys(WeightDeviceInfo info) {
-        Map<OHQSessionOptionKey, Object> options = getOptionsKeys(info.getSessionType());
+    public static Map<OHQSessionOptionKey, Object> getWeightOptionsKeys(WeightDeviceInfo info, int waitTimeSeconds) {
+        Map<OHQSessionOptionKey, Object> options = getOptionsKeys(waitTimeSeconds);
         setWeightDeviceOptionKeys(options, info);
 
         return options;
