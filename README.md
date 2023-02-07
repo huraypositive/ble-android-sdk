@@ -15,11 +15,12 @@
 
 ## 의존성 추가
 ```gradle
-// in your root build.gradle
-allprojects {
+// in your settings.gradle
+dependencyResolutionManagement {
     repositories {
         ...
-        maven { url 'https://jitpack.io' }
+        mavenCentral()
+        maven { url "https://jitpack.io" }
     }
 }
 
