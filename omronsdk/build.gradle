@@ -45,18 +45,25 @@ dependencies {
     api 'com.neovisionaries:nv-bluetooth:1.8'
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            // Creates a Maven publication called "release".
-            release(MavenPublication) {
-                // Applies the component for the release build variant.
-                from components.release
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'net.huray.android'
+            artifactId 'omron-sdk'
+            version '0.0.1'
 
-                // You can then customize attributes of the publication as shown below.
-                groupId = 'com.github.huraypositive'
-                artifactId = 'final'
-                version = '1.3.2'
+            // add the library artifact to the publication
+            artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
+        }
+    }
+
+    // add the repository where you want to publish the artifact
+    repositories {
+        maven {
+            url mavenReleasesRepositoryUrl
+            credentials {
+                username System.getenv("MAVEN_USERNAME")
+                password System.getenv("MAVEN_PASSWORD")
             }
         }
     }
